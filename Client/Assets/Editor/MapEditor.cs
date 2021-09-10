@@ -18,18 +18,19 @@ public class MapEditor
 
         foreach (GameObject gameObject in gameObjects)
         {
+            Tilemap tileBase = Util.FindChild<Tilemap>(gameObject, "Tilemap_Base", true);
             Tilemap tileMap = Util.FindChild<Tilemap>(gameObject, "Tilemap_Collision", true);
 
             using (var writer = File.CreateText($"Assets/Resources/Map/{gameObject.name}.txt"))
             {
-                writer.WriteLine(tileMap.cellBounds.xMin);
-                writer.WriteLine(tileMap.cellBounds.xMax);
-                writer.WriteLine(tileMap.cellBounds.yMin);
-                writer.WriteLine(tileMap.cellBounds.yMax);
+                writer.WriteLine(tileBase.cellBounds.xMin);
+                writer.WriteLine(tileBase.cellBounds.xMax);
+                writer.WriteLine(tileBase.cellBounds.yMin);
+                writer.WriteLine(tileBase.cellBounds.yMax);
 
-                for (int y = tileMap.cellBounds.yMax; y >= tileMap.cellBounds.yMin; --y)
+                for (int y = tileBase.cellBounds.yMax; y >= tileBase.cellBounds.yMin; --y)
                 {
-                    for (int x = tileMap.cellBounds.xMin; x <= tileMap.cellBounds.xMax; ++x)
+                    for (int x = tileBase.cellBounds.xMin; x <= tileBase.cellBounds.xMax; ++x)
                     {
                         TileBase tile = tileMap.GetTile(new Vector3Int(x, y, 0));
                         if (tile)
