@@ -9,6 +9,8 @@ public class CreatureController : MonoBehaviour
     void Start()
     {
         Init();
+        State = CreatureState.Idle;
+        Dir = MoveDir.None;
     }
 
     // Update is called once per frame
@@ -22,7 +24,7 @@ public class CreatureController : MonoBehaviour
         _animator = GetComponent<Animator>();
         _spriteRenderer = GetComponent<SpriteRenderer>();
 
-        Vector3 pos = Managers.Map.CurrentGrid.CellToWorld(_cellPos) + new Vector3(0.5f, 0.5f);
+        Vector3 pos = Managers.Map.CurrentGrid.CellToWorld(CellPos) + new Vector3(0.5f, 0.5f);
         transform.position = pos;
     }
 
@@ -37,7 +39,7 @@ public class CreatureController : MonoBehaviour
         if (CreatureState.Moving != State)
             return;
 
-        Vector3 destPos = Managers.Map.CurrentGrid.CellToWorld(_cellPos) + new Vector3(0.5f, 0.5f);
+        Vector3 destPos = Managers.Map.CurrentGrid.CellToWorld(CellPos) + new Vector3(0.5f, 0.5f);
         Vector3 moveDir = destPos - transform.position;
 
         float dist = moveDir.magnitude;
@@ -59,7 +61,7 @@ public class CreatureController : MonoBehaviour
     {
         if (CreatureState.Idle == State && _dir != MoveDir.None)
         {
-            Vector3Int destPos = _cellPos;
+            Vector3Int destPos = CellPos;
 
             switch (_dir)
             {
@@ -77,10 +79,11 @@ public class CreatureController : MonoBehaviour
                     break;
             }
 
-            if (Managers.Map.CanMove(destPos))
+            State = CreatureState.Moving;
+
+            if (Managers.Map.CanMove(destPos) && null == Managers.Object.Find(destPos))
             {
-                _cellPos = destPos;
-                State = CreatureState.Moving;
+                CellPos = destPos;        
             }
         }
     }
@@ -106,25 +109,24 @@ public class CreatureController : MonoBehaviour
 
     protected virtual void UpdateAnimation()
     {
+        _spriteRenderer.flipX = false;
+
         if (CreatureState.Idle == _state)
         {
             switch (_lastDir)
             {
                 case MoveDir.Up:
                     _animator.Play("IDLE_BACK");
-                    transform.localScale = new Vector3(1.0f, 1.0f, 1.0f);
                     break;
                 case MoveDir.Down:
                     _animator.Play("IDLE_FRONT");
-                    transform.localScale = new Vector3(1.0f, 1.0f, 1.0f);
                     break;
                 case MoveDir.Left:
                     _animator.Play("IDLE_RIGHT");
-                    transform.localScale = new Vector3(-1.0f, 1.0f, 1.0f);
+                    _spriteRenderer.flipX = true;
                     break;
                 case MoveDir.Right:
                     _animator.Play("IDLE_RIGHT");
-                    transform.localScale = new Vector3(1.0f, 1.0f, 1.0f);
                     break;
             }
         }
@@ -134,11 +136,9 @@ public class CreatureController : MonoBehaviour
             {
                 case MoveDir.Up:
                     _animator.Play("WALK_BACK");
-                    _spriteRenderer.flipX = false;
                     break;
                 case MoveDir.Down:
                     _animator.Play("WALK_FRONT");
-                    _spriteRenderer.flipX = false;
                     break;
                 case MoveDir.Left:
                     _animator.Play("WALK_RIGHT");
@@ -146,7 +146,6 @@ public class CreatureController : MonoBehaviour
                     break;
                 case MoveDir.Right:
                     _animator.Play("WALK_RIGHT");
-                    _spriteRenderer.flipX = false;
                     break;
             }
         }
@@ -163,7 +162,7 @@ public class CreatureController : MonoBehaviour
 
     public float _speed = 5.0f;
 
-    protected Vector3Int _cellPos = Vector3Int.zero;
+    public Vector3Int CellPos { get; set; } = Vector3Int.zero;
     protected Animator _animator;
     protected SpriteRenderer _spriteRenderer;
 

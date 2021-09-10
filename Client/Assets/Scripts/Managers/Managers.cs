@@ -11,8 +11,11 @@ public class Managers : MonoBehaviour
     #endregion
     MapManager _map = new MapManager();
     public static MapManager Map { get { return Instance._map; } }
-	#region Core
-	DataManager _data = new DataManager();
+
+    ObjectManager _object = new ObjectManager();
+    public static ObjectManager Object { get { return Instance._object; } }
+    #region Core
+    DataManager _data = new DataManager();
     PoolManager _pool = new PoolManager();
     ResourceManager _resource = new ResourceManager();
     SceneManagerEx _scene = new SceneManagerEx();

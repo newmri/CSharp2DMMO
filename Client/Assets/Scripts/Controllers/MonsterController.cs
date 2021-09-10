@@ -16,11 +16,6 @@ public class MonsterController : CreatureController
         base.UpdateController();
     }
 
-    private void LateUpdate()
-    {
-        Camera.main.transform.position = new Vector3(transform.position.x, transform.position.y, -10.0f);
-    }
-
     void GetDirInput()
     {
         if (Input.GetKey(KeyCode.W))
