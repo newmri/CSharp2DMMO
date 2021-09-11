@@ -10,7 +10,6 @@ public class CreatureController : MonoBehaviour
     {
         Init();
         State = CreatureState.Idle;
-        Dir = MoveDir.None;
     }
 
     // Update is called once per frame
@@ -108,8 +107,8 @@ public class CreatureController : MonoBehaviour
 
     }
 
-    MoveDir _lastDir = MoveDir.Down;
-    MoveDir _dir = MoveDir.Down;
+    protected MoveDir _lastDir = MoveDir.Down;
+    protected MoveDir _dir = MoveDir.Down;
 
     public MoveDir Dir
     {
@@ -201,7 +200,7 @@ public class CreatureController : MonoBehaviour
     protected Animator _animator;
     protected SpriteRenderer _spriteRenderer;
 
-    CreatureState _state = CreatureState.Idle;
+    protected CreatureState _state = CreatureState.Idle;
     public CreatureState State
     {
         get { return _state; }

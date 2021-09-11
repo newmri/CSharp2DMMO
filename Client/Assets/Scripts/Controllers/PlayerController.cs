@@ -10,6 +10,74 @@ public class PlayerController : CreatureController
         base.Init();
     }
 
+    protected override void UpdateAnimation()
+    {
+        _spriteRenderer.flipX = false;
+
+        if (CreatureState.Idle == _state)
+        {
+            switch (_lastDir)
+            {
+                case MoveDir.Up:
+                    _animator.Play("IDLE_BACK");
+                    break;
+                case MoveDir.Down:
+                    _animator.Play("IDLE_FRONT");
+                    break;
+                case MoveDir.Left:
+                    _animator.Play("IDLE_RIGHT");
+                    _spriteRenderer.flipX = true;
+                    break;
+                case MoveDir.Right:
+                    _animator.Play("IDLE_RIGHT");
+                    break;
+            }
+        }
+        else if (CreatureState.Moving == _state)
+        {
+            switch (_dir)
+            {
+                case MoveDir.Up:
+                    _animator.Play("WALK_BACK");
+                    break;
+                case MoveDir.Down:
+                    _animator.Play("WALK_FRONT");
+                    break;
+                case MoveDir.Left:
+                    _animator.Play("WALK_RIGHT");
+                    _spriteRenderer.flipX = true;
+                    break;
+                case MoveDir.Right:
+                    _animator.Play("WALK_RIGHT");
+                    break;
+            }
+        }
+        else if (CreatureState.Skill == _state)
+        {
+            switch (_lastDir)
+            {
+                case MoveDir.Up:
+                    _animator.Play(_rangedSkill ? "ATTACK_WEAPON_BACK" : "ATTACK_BACK");
+                    break;
+                case MoveDir.Down:
+                    _animator.Play(_rangedSkill ? "ATTACK_WEAPON_FRONT" : "ATTACK_FRONT");
+                    break;
+                case MoveDir.Left:
+                    _animator.Play(_rangedSkill ? "ATTACK_WEAPON_RIGHT" : "ATTACK_RIGHT");
+                    _spriteRenderer.flipX = true;
+                    break;
+                case MoveDir.Right:
+                    _animator.Play(_rangedSkill ? "ATTACK_WEAPON_RIGHT" : "ATTACK_RIGHT");
+                    break;
+            }
+        }
+        else
+        {
+
+        }
+
+    }
+
     protected override void UpdateController()
     {
         switch (State)
@@ -29,7 +97,7 @@ public class PlayerController : CreatureController
 
     void LateUpdate()
     {
-        Camera.main.transform.position = new Vector3(transform.position.x, transform.position.y, -10.0f);    
+        Camera.main.transform.position = new Vector3(transform.position.x, transform.position.y, -10.0f);
     }
 
     void GetDirInput()
@@ -61,12 +129,15 @@ public class PlayerController : CreatureController
         if (Input.GetKey(KeyCode.Space))
         {
             State = CreatureState.Skill;
-            _coroutineSkill = StartCoroutine("CoStartPunch");
+            // _coroutineSkill = StartCoroutine("CoStartPunch");
+            _coroutineSkill = StartCoroutine("CoStartShootArrow");
+
         }
     }
 
     IEnumerator CoStartPunch()
     {
+        _rangedSkill = false;
         GameObject target = Managers.Object.Find(GetFrontCellPos());
 
         yield return new WaitForSeconds(0.5f);
@@ -74,5 +145,19 @@ public class PlayerController : CreatureController
         _coroutineSkill = null;
     }
 
+    IEnumerator CoStartShootArrow()
+    {
+        _rangedSkill = true;
+        GameObject arrow = Managers.Resource.Instantiate("Creature/Arrow");
+        ArrowController ArrowController = arrow.GetComponent<ArrowController>();
+        ArrowController.Dir = _lastDir;
+        ArrowController.CellPos = CellPos;
+
+        yield return new WaitForSeconds(0.3f);
+        State = CreatureState.Idle;
+        _coroutineSkill = null;
+    }
+
     Coroutine _coroutineSkill;
+    bool _rangedSkill = false;
 }

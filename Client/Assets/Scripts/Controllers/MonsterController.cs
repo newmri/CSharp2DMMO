@@ -8,6 +8,7 @@ public class MonsterController : CreatureController
     protected override void Init()
     {
         base.Init();
+        Dir = MoveDir.None;
     }
 
     protected override void UpdateController()
