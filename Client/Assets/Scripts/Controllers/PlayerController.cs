@@ -12,6 +12,17 @@ public class PlayerController : CreatureController
 
     protected override void UpdateController()
     {
+        switch (State)
+        {
+            case CreatureState.Idle:
+                GetDirInput();
+                GetIdleInput();
+                break;
+            case CreatureState.Moving:
+                GetDirInput();
+                break;
+        }
+
         GetDirInput();
         base.UpdateController();
     }
@@ -44,4 +55,24 @@ public class PlayerController : CreatureController
             Dir = MoveDir.None;
         }
     }
+
+    void GetIdleInput()
+    {
+        if (Input.GetKey(KeyCode.Space))
+        {
+            State = CreatureState.Skill;
+            _coroutineSkill = StartCoroutine("CoStartPunch");
+        }
+    }
+
+    IEnumerator CoStartPunch()
+    {
+        GameObject target = Managers.Object.Find(GetFrontCellPos());
+
+        yield return new WaitForSeconds(0.5f);
+        State = CreatureState.Idle;
+        _coroutineSkill = null;
+    }
+
+    Coroutine _coroutineSkill;
 }
