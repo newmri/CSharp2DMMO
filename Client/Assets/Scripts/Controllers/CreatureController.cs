@@ -237,4 +237,9 @@ public class CreatureController : MonoBehaviour
 
         return cellPos;
     }
+
+    public virtual void OnDamaged()
+    {
+
+    }
 }

@@ -66,6 +66,10 @@ public class ArrowController : CreatureController
                 }
                 else
                 {
+                    CreatureController creatrueController = target.GetComponent<CreatureController>();
+                    if(creatrueController)
+                        creatrueController.OnDamaged();
+
                     Managers.Resource.Destroy(gameObject);
                 }
             }

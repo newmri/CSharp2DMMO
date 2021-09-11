@@ -139,6 +139,12 @@ public class PlayerController : CreatureController
     {
         _rangedSkill = false;
         GameObject target = Managers.Object.Find(GetFrontCellPos());
+        if (target)
+        {
+            CreatureController creatrueController = target.GetComponent<CreatureController>();
+            if (creatrueController)
+                creatrueController.OnDamaged();
+        }
 
         yield return new WaitForSeconds(0.5f);
         State = CreatureState.Idle;
