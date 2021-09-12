@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -24,6 +25,21 @@ public class ObjectManager
                 continue;
 
             if (creatureController.CellPos == cellPos)
+                return gameObject;
+        }
+
+        return null;
+    }
+
+    public GameObject Find(Func<GameObject, bool> condition)
+    {
+        foreach (GameObject gameObject in _objects)
+        {
+            CreatureController creatureController = gameObject.GetComponent<CreatureController>();
+            if (null == creatureController)
+                continue;
+
+            if (condition.Invoke(gameObject))
                 return gameObject;
         }
 

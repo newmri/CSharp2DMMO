@@ -19,6 +19,11 @@ public class MonsterController : CreatureController
         {
             _coPatrol = StartCoroutine("CoPatrol");
         }
+
+        if (null == _coSearch)
+        {
+            _coSearch = StartCoroutine("CoSearch");
+        }
     }
 
     IEnumerator CoPatrol()
@@ -43,9 +48,53 @@ public class MonsterController : CreatureController
         State = CreatureState.Idle;
     }
 
+    IEnumerator CoSearch()
+    {
+        while (true)
+        {
+            yield return new WaitForSeconds(1);
+
+            if (_target)
+                continue;
+
+            _target = Managers.Object.Find((gameObject) =>
+            {
+                PlayerController playerController = gameObject.GetComponent<PlayerController>();
+                if (null == playerController)
+                    return false;
+
+                Vector3Int dir = playerController.CellPos - CellPos;
+                if (dir.magnitude > _searchRange)
+                    return false;
+
+                return true;
+            });
+        }
+    }
+
+    float _searchRange = 5.0f;
+    [SerializeField]
+    GameObject _target;
+
     protected override void MoveToNextPos()
     {
-        Vector3Int moveCellDir = _destCellPos - CellPos;
+        Vector3Int destPos = _destCellPos;
+        if (_target)
+        {
+            destPos = _target.GetComponent<CreatureController>().CellPos;
+        }
+
+        List<Vector3Int> path = Managers.Map.FindPath(CellPos, destPos, ignoreDestCollision: true);
+        if (path.Count < 2 || (_target && path.Count > 10))
+        {
+            _target = null;
+            State = CreatureState.Idle;
+            return;
+        }
+
+        Vector3Int nextPos = path[1];
+
+        Vector3Int moveCellDir = nextPos - CellPos;
 
         if (moveCellDir.x > 0)
             Dir = MoveDir.Right;
@@ -58,36 +107,17 @@ public class MonsterController : CreatureController
         else
             Dir = MoveDir.None;
 
-        Vector3Int destPos = CellPos;
-
-        switch (_dir)
-        {
-            case MoveDir.Up:
-                destPos += Vector3Int.up;
-                break;
-            case MoveDir.Down:
-                destPos += Vector3Int.down;
-                break;
-            case MoveDir.Left:
-                destPos += Vector3Int.left;
-                break;
-            case MoveDir.Right:
-                destPos += Vector3Int.right;
-                break;
-        }
-
         State = CreatureState.Moving;
 
-        if (Managers.Map.CanMove(destPos) && null == Managers.Object.Find(destPos))
+        if (Managers.Map.CanMove(nextPos) && null == Managers.Object.Find(nextPos))
         {
-            CellPos = destPos;
+            CellPos = nextPos;
         }
         else
         {
             State = CreatureState.Idle;
         }
     }
-
 
     public override void OnDamaged()
     {
@@ -101,6 +131,9 @@ public class MonsterController : CreatureController
     }
 
     Coroutine _coPatrol;
+    Coroutine _coSearch;
+
+    [SerializeField]
     Vector3Int _destCellPos;
 
     public override CreatureState State
@@ -117,6 +150,12 @@ public class MonsterController : CreatureController
             {
                 StopCoroutine(_coPatrol);
                 _coPatrol = null;
+            }
+
+            if (null != _coSearch)
+            {
+                StopCoroutine(_coSearch);
+                _coSearch = null;
             }
         }
     }
