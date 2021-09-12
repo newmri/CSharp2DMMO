@@ -9,6 +9,12 @@ public class MonsterController : CreatureController
     {
         base.Init();
         Dir = MoveDir.None;
+        _rangedSkill = (Random.Range(0, 2)) == 0 ? true : false;
+
+        if (_rangedSkill)
+            _skillRange = Random.Range(15.0f, 20.0f);
+        else
+            _skillRange = 1.0f;
     }
 
     protected override void UpdateIdle()
@@ -72,7 +78,13 @@ public class MonsterController : CreatureController
         }
     }
 
-    float _searchRange = 5.0f;
+    [SerializeField]
+    float _searchRange = 25.0f;
+    [SerializeField]
+    float _skillRange = 1.0f;
+    [SerializeField]
+    bool _rangedSkill = false;
+
     [SerializeField]
     GameObject _target;
 
@@ -82,10 +94,25 @@ public class MonsterController : CreatureController
         if (_target)
         {
             destPos = _target.GetComponent<CreatureController>().CellPos;
+
+            Vector3Int dir = destPos - CellPos;
+
+            if (dir.magnitude <= _skillRange && (dir.x == 0 || dir.y == 0))
+            {
+                Dir = GetDirFromVec(dir);
+                State = CreatureState.Skill;
+
+                if(_rangedSkill)
+                    _coroutineSkill = StartCoroutine("CoStartShootArrow");
+                else
+                    _coroutineSkill = StartCoroutine("CoStartPunch");
+
+                return;
+            }
         }
 
         List<Vector3Int> path = Managers.Map.FindPath(CellPos, destPos, ignoreDestCollision: true);
-        if (path.Count < 2 || (_target && path.Count > 10))
+        if (path.Count < 2 || (_target && path.Count > 20))
         {
             _target = null;
             State = CreatureState.Idle;
@@ -96,16 +123,7 @@ public class MonsterController : CreatureController
 
         Vector3Int moveCellDir = nextPos - CellPos;
 
-        if (moveCellDir.x > 0)
-            Dir = MoveDir.Right;
-        else if (moveCellDir.x < 0)
-            Dir = MoveDir.Left;
-        else if (moveCellDir.y > 0)
-            Dir = MoveDir.Up;
-        else if (moveCellDir.y < 0)
-            Dir = MoveDir.Down;
-        else
-            Dir = MoveDir.None;
+        Dir = GetDirFromVec(moveCellDir);
 
         State = CreatureState.Moving;
 
@@ -132,6 +150,7 @@ public class MonsterController : CreatureController
 
     Coroutine _coPatrol;
     Coroutine _coSearch;
+    Coroutine _coroutineSkill;
 
     [SerializeField]
     Vector3Int _destCellPos;
@@ -160,4 +179,30 @@ public class MonsterController : CreatureController
         }
     }
 
+    IEnumerator CoStartPunch()
+    {
+        GameObject target = Managers.Object.Find(GetFrontCellPos());
+        if (target)
+        {
+            CreatureController creatrueController = target.GetComponent<CreatureController>();
+            if (creatrueController)
+                creatrueController.OnDamaged();
+        }
+
+        yield return new WaitForSeconds(0.5f);
+        State = CreatureState.Moving;
+        _coroutineSkill = null;
+    }
+
+    IEnumerator CoStartShootArrow()
+    {
+        GameObject arrow = Managers.Resource.Instantiate("Creature/Arrow");
+        ArrowController ArrowController = arrow.GetComponent<ArrowController>();
+        ArrowController.Dir = _lastDir;
+        ArrowController.CellPos = CellPos;
+
+        yield return new WaitForSeconds(0.3f);
+        State = CreatureState.Moving;
+        _coroutineSkill = null;
+    }
 }
