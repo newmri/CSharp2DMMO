@@ -84,7 +84,7 @@ public class PlayerController : CreatureController
         {
             case CreatureState.Idle:
                 GetDirInput();
-                GetIdleInput();
+                UpdateIdle();
                 break;
             case CreatureState.Moving:
                 GetDirInput();
@@ -98,6 +98,23 @@ public class PlayerController : CreatureController
     void LateUpdate()
     {
         Camera.main.transform.position = new Vector3(transform.position.x, transform.position.y, -10.0f);
+    }
+
+    protected override void UpdateIdle()
+    {
+        if (MoveDir.None != Dir)
+        {
+            State = CreatureState.Moving;
+            return;
+        }
+
+        if (Input.GetKey(KeyCode.Space))
+        {
+            State = CreatureState.Skill;
+            // _coroutineSkill = StartCoroutine("CoStartPunch");
+            _coroutineSkill = StartCoroutine("CoStartShootArrow");
+
+        }
     }
 
     void GetDirInput()
@@ -121,17 +138,6 @@ public class PlayerController : CreatureController
         else
         {
             Dir = MoveDir.None;
-        }
-    }
-
-    void GetIdleInput()
-    {
-        if (Input.GetKey(KeyCode.Space))
-        {
-            State = CreatureState.Skill;
-            // _coroutineSkill = StartCoroutine("CoStartPunch");
-            _coroutineSkill = StartCoroutine("CoStartShootArrow");
-
         }
     }
 

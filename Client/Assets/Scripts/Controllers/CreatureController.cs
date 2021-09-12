@@ -9,7 +9,6 @@ public class CreatureController : MonoBehaviour
     void Start()
     {
         Init();
-        State = CreatureState.Idle;
     }
 
     // Update is called once per frame
@@ -55,9 +54,7 @@ public class CreatureController : MonoBehaviour
         if (dist < _speed * Time.deltaTime)
         {
             transform.position = destPos;
-            _state = CreatureState.Idle;
-            if (MoveDir.None == _dir)
-                UpdateAnimation();
+            MoveToNextPos();
         }
         else
         {
@@ -66,35 +63,43 @@ public class CreatureController : MonoBehaviour
         }
     }
 
+    protected virtual void MoveToNextPos()
+    {
+        if (MoveDir.None == _dir)
+        {
+            State = CreatureState.Idle;
+            return;
+        }
+
+        Vector3Int destPos = CellPos;
+
+        switch (_dir)
+        {
+            case MoveDir.Up:
+                destPos += Vector3Int.up;
+                break;
+            case MoveDir.Down:
+                destPos += Vector3Int.down;
+                break;
+            case MoveDir.Left:
+                destPos += Vector3Int.left;
+                break;
+            case MoveDir.Right:
+                destPos += Vector3Int.right;
+                break;
+        }
+
+        State = CreatureState.Moving;
+
+        if (Managers.Map.CanMove(destPos) && null == Managers.Object.Find(destPos))
+        {
+            CellPos = destPos;
+        }
+    }
+
     protected virtual void UpdateIdle()
     {
-        if (_dir != MoveDir.None)
-        {
-            Vector3Int destPos = CellPos;
 
-            switch (_dir)
-            {
-                case MoveDir.Up:
-                    destPos += Vector3Int.up;
-                    break;
-                case MoveDir.Down:
-                    destPos += Vector3Int.down;
-                    break;
-                case MoveDir.Left:
-                    destPos += Vector3Int.left;
-                    break;
-                case MoveDir.Right:
-                    destPos += Vector3Int.right;
-                    break;
-            }
-
-            State = CreatureState.Moving;
-
-            if (Managers.Map.CanMove(destPos) && null == Managers.Object.Find(destPos))
-            {
-                CellPos = destPos;        
-            }
-        }
     }
 
     protected virtual void UpdateSkill()
@@ -201,7 +206,7 @@ public class CreatureController : MonoBehaviour
     protected SpriteRenderer _spriteRenderer;
 
     protected CreatureState _state = CreatureState.Idle;
-    public CreatureState State
+    public virtual CreatureState State
     {
         get { return _state; }
         set
