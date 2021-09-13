@@ -8,14 +8,17 @@ public class Managers : MonoBehaviour
     static Managers Instance { get { Init(); return s_instance; } } // 유일한 매니저를 갖고온다
 
     #region Contents
-    #endregion
     MapManager _map = new MapManager();
-    public static MapManager Map { get { return Instance._map; } }
+    ObjectManager _obj = new ObjectManager();
+    NetworkManager _network = new NetworkManager();
 
-    ObjectManager _object = new ObjectManager();
-    public static ObjectManager Object { get { return Instance._object; } }
-    #region Core
-    DataManager _data = new DataManager();
+    public static MapManager Map { get { return Instance._map; } }
+    public static ObjectManager Object { get { return Instance._obj; } }
+    public static NetworkManager Network { get { return Instance._network; } }
+	#endregion
+
+	#region Core
+	DataManager _data = new DataManager();
     PoolManager _pool = new PoolManager();
     ResourceManager _resource = new ResourceManager();
     SceneManagerEx _scene = new SceneManagerEx();
@@ -37,7 +40,7 @@ public class Managers : MonoBehaviour
 
     void Update()
     {
-
+        _network.Update();
     }
 
     static void Init()
@@ -54,6 +57,7 @@ public class Managers : MonoBehaviour
             DontDestroyOnLoad(go);
             s_instance = go.GetComponent<Managers>();
 
+            s_instance._network.Init();
             s_instance._data.Init();
             s_instance._pool.Init();
             s_instance._sound.Init();

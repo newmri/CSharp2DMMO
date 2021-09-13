@@ -1,55 +1,51 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 public class ObjectManager
 {
+	//Dictionary<int, GameObject> _objects = new Dictionary<int, GameObject>();
+	List<GameObject> _objects = new List<GameObject>();
 
-    public void Add(GameObject gameObject)
-    {
-        _objects.Add(gameObject);
-    }
+	public void Add(GameObject go)
+	{
+		_objects.Add(go);
+	}
 
-    public void Remove(GameObject gameObject)
-    {
-        _objects.Remove(gameObject);
-    }
+	public void Remove(GameObject go)
+	{
+		_objects.Remove(go);
+	}
 
-    public GameObject Find(Vector3Int cellPos)
-    {
-        foreach (GameObject gameObject in _objects)
-        {
-            CreatureController creatureController = gameObject.GetComponent<CreatureController>();
-            if (null == creatureController)
-                continue;
+	public GameObject Find(Vector3Int cellPos)
+	{
+		foreach (GameObject obj in _objects)
+		{
+			CreatureController cc = obj.GetComponent<CreatureController>();
+			if (cc == null)
+				continue;
 
-            if (creatureController.CellPos == cellPos)
-                return gameObject;
-        }
+			if (cc.CellPos == cellPos)
+				return obj;
+		}
 
-        return null;
-    }
+		return null;
+	}
 
-    public GameObject Find(Func<GameObject, bool> condition)
-    {
-        foreach (GameObject gameObject in _objects)
-        {
-            CreatureController creatureController = gameObject.GetComponent<CreatureController>();
-            if (null == creatureController)
-                continue;
+	public GameObject Find(Func<GameObject, bool> condition)
+	{
+		foreach (GameObject obj in _objects)
+		{
+			if (condition.Invoke(obj))
+				return obj;
+		}
 
-            if (condition.Invoke(gameObject))
-                return gameObject;
-        }
+		return null;
+	}
 
-        return null;
-    }
-
-    public void Clear()
-    {
-        _objects.Clear();
-    }
-
-    List<GameObject> _objects = new List<GameObject>();
+	public void Clear()
+	{
+		_objects.Clear();
+	}
 }

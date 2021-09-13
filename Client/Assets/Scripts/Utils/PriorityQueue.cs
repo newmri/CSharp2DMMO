@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class MyPriorityQueue<T> where T : IComparable<T>
+public class PriorityQueue<T> where T : IComparable<T>
 {
 	List<T> _heap = new List<T>();
 

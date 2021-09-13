@@ -1,208 +1,213 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using static Define;
 
 public class MonsterController : CreatureController
 {
-    protected override void Init()
-    {
-        base.Init();
-        Dir = MoveDir.None;
-        _rangedSkill = (Random.Range(0, 2)) == 0 ? true : false;
+	Coroutine _coSkill;
+	Coroutine _coPatrol;
+	Coroutine _coSearch;
 
-        if (_rangedSkill)
-            _skillRange = Random.Range(15.0f, 20.0f);
-        else
-            _skillRange = 1.0f;
-    }
+	[SerializeField]
+	Vector3Int _destCellPos;
 
-    protected override void UpdateIdle()
-    {
-        base.UpdateIdle();
+	[SerializeField]
+	GameObject _target;
 
-        if (null == _coPatrol)
-        {
-            _coPatrol = StartCoroutine("CoPatrol");
-        }
+	[SerializeField]
+	float _searchRange = 10.0f;
 
-        if (null == _coSearch)
-        {
-            _coSearch = StartCoroutine("CoSearch");
-        }
-    }
+	[SerializeField]
+	float _skillRange = 1.0f;
 
-    IEnumerator CoPatrol()
-    {
-        int waitForSeconds = Random.Range(1, 4);
-        yield return new WaitForSeconds(waitForSeconds);
+	[SerializeField]
+	bool _rangedSkill = false;
 
-        for (int i = 0; i < 10; ++i)
-        {
-            int xRange = Random.Range(-5, 6);
-            int yRange = Random.Range(-5, 6);
-            Vector3Int randPos = CellPos + new Vector3Int(xRange, yRange, 0);
+	public override CreatureState State
+	{
+		get { return _state; }
+		set
+		{
+			if (_state == value)
+				return;
 
-            if (Managers.Map.CanMove(randPos) && null == Managers.Object.Find(randPos))
-            {
-                _destCellPos = randPos;
-                State = CreatureState.Moving;
-                yield break;
-            }
-        }
+			base.State = value;
 
-        State = CreatureState.Idle;
-    }
+			if (_coPatrol != null)
+			{
+				StopCoroutine(_coPatrol);
+				_coPatrol = null;
+			}
 
-    IEnumerator CoSearch()
-    {
-        while (true)
-        {
-            yield return new WaitForSeconds(1);
+			if (_coSearch != null)
+			{
+				StopCoroutine(_coSearch);
+				_coSearch = null;
+			}
+		}
+	}
 
-            if (_target)
-                continue;
+	protected override void Init()
+	{
+		base.Init();
 
-            _target = Managers.Object.Find((gameObject) =>
-            {
-                PlayerController playerController = gameObject.GetComponent<PlayerController>();
-                if (null == playerController)
-                    return false;
+		State = CreatureState.Idle;
+		Dir = MoveDir.None;
 
-                Vector3Int dir = playerController.CellPos - CellPos;
-                if (dir.magnitude > _searchRange)
-                    return false;
+		_speed = 3.0f;
+		_rangedSkill = (Random.Range(0, 2) == 0 ? true : false);
 
-                return true;
-            });
-        }
-    }
+		if (_rangedSkill)
+			_skillRange = 10.0f;
+		else
+			_skillRange = 1.0f;
+	}
 
-    [SerializeField]
-    float _searchRange = 25.0f;
-    [SerializeField]
-    float _skillRange = 1.0f;
-    [SerializeField]
-    bool _rangedSkill = false;
+	protected override void UpdateIdle()
+	{
+		base.UpdateIdle();
 
-    [SerializeField]
-    GameObject _target;
+		if (_coPatrol == null)
+		{
+			_coPatrol = StartCoroutine("CoPatrol");
+		}
 
-    protected override void MoveToNextPos()
-    {
-        Vector3Int destPos = _destCellPos;
-        if (_target)
-        {
-            destPos = _target.GetComponent<CreatureController>().CellPos;
+		if (_coSearch == null)
+		{
+			_coSearch = StartCoroutine("CoSearch");
+		}
+	}
 
-            Vector3Int dir = destPos - CellPos;
+	protected override void MoveToNextPos()
+	{
+		Vector3Int destPos = _destCellPos;
+		if (_target != null)
+		{
+			destPos = _target.GetComponent<CreatureController>().CellPos;
 
-            if (dir.magnitude <= _skillRange && (dir.x == 0 || dir.y == 0))
-            {
-                Dir = GetDirFromVec(dir);
-                State = CreatureState.Skill;
+			Vector3Int dir = destPos - CellPos;
+			if (dir.magnitude <= _skillRange && (dir.x == 0 || dir.y == 0))
+			{
+				Dir = GetDirFromVec(dir);
+				State = CreatureState.Skill;
 
-                if(_rangedSkill)
-                    _coroutineSkill = StartCoroutine("CoStartShootArrow");
-                else
-                    _coroutineSkill = StartCoroutine("CoStartPunch");
+				if (_rangedSkill)
+					_coSkill = StartCoroutine("CoStartShootArrow");
+				else
+					_coSkill = StartCoroutine("CoStartPunch");
 
-                return;
-            }
-        }
+				return;
+			}
+		}
 
-        List<Vector3Int> path = Managers.Map.FindPath(CellPos, destPos, ignoreDestCollision: true);
-        if (path.Count < 2 || (_target && path.Count > 20))
-        {
-            _target = null;
-            State = CreatureState.Idle;
-            return;
-        }
+		List<Vector3Int> path = Managers.Map.FindPath(CellPos, destPos, ignoreDestCollision: true);
+		if (path.Count < 2 || (_target != null && path.Count > 20))
+		{
+			_target = null;
+			State = CreatureState.Idle;
+			return;
+		}
 
-        Vector3Int nextPos = path[1];
+		Vector3Int nextPos = path[1];
+		Vector3Int moveCellDir = nextPos - CellPos;
 
-        Vector3Int moveCellDir = nextPos - CellPos;
+		Dir = GetDirFromVec(moveCellDir);
 
-        Dir = GetDirFromVec(moveCellDir);
+		if (Managers.Map.CanGo(nextPos) && Managers.Object.Find(nextPos) == null)
+		{
+			CellPos = nextPos;
+		}
+		else
+		{
+			State = CreatureState.Idle;
+		}
+	}
 
-        State = CreatureState.Moving;
+	public override void OnDamaged()
+	{
+		GameObject effect = Managers.Resource.Instantiate("Effect/DieEffect");
+		effect.transform.position = transform.position;
+		effect.GetComponent<Animator>().Play("START");
+		GameObject.Destroy(effect, 0.5f);
 
-        if (Managers.Map.CanMove(nextPos) && null == Managers.Object.Find(nextPos))
-        {
-            CellPos = nextPos;
-        }
-        else
-        {
-            State = CreatureState.Idle;
-        }
-    }
+		Managers.Object.Remove(gameObject);
+		Managers.Resource.Destroy(gameObject);
+	}
 
-    public override void OnDamaged()
-    {
-        GameObject effect = Managers.Resource.Instantiate("Effect/DieEffect");
-        effect.transform.position = transform.position;
-        effect.GetComponent<Animator>().Play("START");
-        GameObject.Destroy(effect, 0.5f);
+	IEnumerator CoPatrol()
+	{
+		int waitSeconds = Random.Range(1, 4);
+		yield return new WaitForSeconds(waitSeconds);
 
-        Managers.Object.Remove(gameObject);
-        Managers.Resource.Destroy(gameObject);
-    }
+		for (int i = 0; i < 10; i++)
+		{
+			int xRange = Random.Range(-5, 6);
+			int yRange = Random.Range(-5, 6);
+			Vector3Int randPos = CellPos + new Vector3Int(xRange, yRange, 0);
 
-    Coroutine _coPatrol;
-    Coroutine _coSearch;
-    Coroutine _coroutineSkill;
+			if (Managers.Map.CanGo(randPos) && Managers.Object.Find(randPos) == null)
+			{
+				_destCellPos = randPos;
+				State = CreatureState.Moving;
+				yield break;
+			}
+		}
 
-    [SerializeField]
-    Vector3Int _destCellPos;
+		State = CreatureState.Idle;
+	}
 
-    public override CreatureState State
-    {
-        get { return _state; }
-        set
-        {
-            if (value == _state)
-                return;
+	IEnumerator CoSearch()
+	{
+		while (true)
+		{
+			yield return new WaitForSeconds(1);
 
-            base.State = value;
+			if (_target != null)
+				continue;
 
-            if (null != _coPatrol)
-            {
-                StopCoroutine(_coPatrol);
-                _coPatrol = null;
-            }
+			_target = Managers.Object.Find((go) =>
+			{
+				PlayerController pc = go.GetComponent<PlayerController>();
+				if (pc == null)
+					return false;
 
-            if (null != _coSearch)
-            {
-                StopCoroutine(_coSearch);
-                _coSearch = null;
-            }
-        }
-    }
+				Vector3Int dir = (pc.CellPos - CellPos);
+				if (dir.magnitude > _searchRange)
+					return false;
 
-    IEnumerator CoStartPunch()
-    {
-        GameObject target = Managers.Object.Find(GetFrontCellPos());
-        if (target)
-        {
-            CreatureController creatrueController = target.GetComponent<CreatureController>();
-            if (creatrueController)
-                creatrueController.OnDamaged();
-        }
+				return true;
+			});
+		}
+	}
 
-        yield return new WaitForSeconds(0.5f);
-        State = CreatureState.Moving;
-        _coroutineSkill = null;
-    }
+	IEnumerator CoStartPunch()
+	{
+		// 피격 판정
+		GameObject go = Managers.Object.Find(GetFrontCellPos());
+		if (go != null)
+		{
+			CreatureController cc = go.GetComponent<CreatureController>();
+			if (cc != null)
+				cc.OnDamaged();
+		}
 
-    IEnumerator CoStartShootArrow()
-    {
-        GameObject arrow = Managers.Resource.Instantiate("Creature/Arrow");
-        ArrowController ArrowController = arrow.GetComponent<ArrowController>();
-        ArrowController.Dir = _lastDir;
-        ArrowController.CellPos = CellPos;
+		// 대기 시간
+		yield return new WaitForSeconds(0.5f);
+		State = CreatureState.Moving;
+		_coSkill = null;
+	}
 
-        yield return new WaitForSeconds(0.3f);
-        State = CreatureState.Moving;
-        _coroutineSkill = null;
-    }
+	IEnumerator CoStartShootArrow()
+	{
+		GameObject go = Managers.Resource.Instantiate("Creature/Arrow");
+		ArrowController ac = go.GetComponent<ArrowController>();
+		ac.Dir = _lastDir;
+		ac.CellPos = CellPos;
+
+		// 대기 시간
+		yield return new WaitForSeconds(0.3f);
+		State = CreatureState.Moving;
+		_coSkill = null;
+	}
 }
