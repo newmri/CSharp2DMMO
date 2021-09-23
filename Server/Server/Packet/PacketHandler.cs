@@ -1,6 +1,7 @@
 ﻿using Google.Protobuf;
 using Google.Protobuf.Protocol;
 using Server;
+using Server.Game;
 using ServerCore;
 using System;
 using System.Collections.Generic;
@@ -15,20 +16,34 @@ class PacketHandler
 
 		Console.WriteLine($"C_Move ({movePacket.PosInfo.PosX}, {movePacket.PosInfo.PosY})");
 
-		if (null == clientSession.MyPlayer)
+		Player player = clientSession.MyPlayer;
+
+		if (null == player)
 			return;
-		if (null == clientSession.MyPlayer.Room)
+
+		GameRoom room = player.Room;
+
+		if (null == room)
 			return;
 
-		// TODO: Valid Check
+		room.HandleMove(player, movePacket);
+	}
 
-		PlayerInfo info = clientSession.MyPlayer.Info;
-		info.PosInfo = movePacket.PosInfo;
+	public static void C_SkillHandler(PacketSession session, IMessage packet)
+	{
+		C_Skill skillPacket = packet as C_Skill;
+		ClientSession clientSession = session as ClientSession;
 
-		S_Move resMovePacket = new S_Move();
-		resMovePacket.PlayerID = clientSession.MyPlayer.Info.PlayerID;
-		resMovePacket.PosInfo = movePacket.PosInfo;
+		Player player = clientSession.MyPlayer;
 
-		clientSession.MyPlayer.Room.Broadcast(resMovePacket);
+		if (null == player)
+			return;
+
+		GameRoom room = player.Room;
+
+		if (null == room)
+			return;
+
+		room.HandleSkill(player, skillPacket);
 	}
 }

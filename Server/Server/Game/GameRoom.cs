@@ -77,6 +77,47 @@ namespace Server.Game
             }
         }
 
+        public void HandleMove(Player player, C_Move movePacket)
+        {
+            if (null == player)
+                return;
+
+            lock (_lock)
+            {
+                // TODO: Valid Check
+
+                PlayerInfo info = player.Info;
+                info.PosInfo = movePacket.PosInfo;
+
+                S_Move resMovePacket = new S_Move();
+                resMovePacket.PlayerID = player.Info.PlayerID;
+                resMovePacket.PosInfo = movePacket.PosInfo;
+
+                Broadcast(resMovePacket);
+            }
+        }
+
+        public void HandleSkill(Player player, C_Skill skillPacket)
+        {
+            if (null == player)
+                return;
+
+            lock (_lock)
+            {
+                PlayerInfo info = player.Info;
+                if (info.PosInfo.State != CreatureState.Idle)
+                    return;
+
+                // TODO: 스킬 사용 가능 여부 체크
+                info.PosInfo.State = CreatureState.Skill;
+
+                S_Skill skill = new S_Skill() { Info = new SkillInfo() };
+                skill.PlayerID = info.PlayerID;
+                skill.Info.SkillID = 1;
+                Broadcast(skill);
+            }
+        }
+
         public void Broadcast(IMessage packet)
         {
             lock (_lock)
