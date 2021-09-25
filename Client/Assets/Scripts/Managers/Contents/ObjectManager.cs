@@ -19,6 +19,7 @@ public class ObjectManager
 			MyPlayer = gameObject.GetComponent<MyPlayerController>();
 			MyPlayer.ID = info.PlayerID;
 			MyPlayer.PosInfo = info.PosInfo;
+			MyPlayer.SyncPos();
 		}
 
 		else
@@ -29,6 +30,7 @@ public class ObjectManager
 			PlayerController playerController = gameObject.GetComponent<PlayerController>();
 			playerController.ID = info.PlayerID;
 			playerController.PosInfo = info.PosInfo;
+			playerController.SyncPos();
 		}
 	}
 

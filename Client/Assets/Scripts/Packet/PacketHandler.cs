@@ -56,4 +56,19 @@ class PacketHandler
 
 		creatureController.PosInfo = movePacket.PosInfo;
 	}
+
+	public static void S_SkillHandler(PacketSession session, IMessage packet)
+	{
+		S_Skill skillPacket = packet as S_Skill;
+
+		GameObject gameObject = Managers.Object.Find(skillPacket.PlayerID);
+		if (null == gameObject)
+			return;
+
+		PlayerController playerController = gameObject.GetComponent<PlayerController>();
+		if (null == playerController)
+			return;
+
+		playerController.UseSkill(skillPacket.Info.SkillID);
+	}
 }
