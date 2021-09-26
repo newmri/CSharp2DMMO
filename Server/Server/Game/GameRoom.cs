@@ -11,7 +11,13 @@ namespace Server.Game
         object _lock = new object();
         public int RoomID { get; set; }
 
-        List<Player> _players = new List<Player>();
+        Dictionary<int, Player> _players = new Dictionary<int, Player>();
+        Map _map = new Map();
+
+        public void Init(int mapID)
+        {
+            _map.LoadMap(mapID);
+        }
 
         public void EnterGame(Player newPlayer)
         {
@@ -20,7 +26,7 @@ namespace Server.Game
 
             lock (_lock)
             {
-                _players.Add(newPlayer);
+                _players.Add(newPlayer.Info.PlayerID, newPlayer);
                 newPlayer.Room = this;
 
                 {
@@ -29,7 +35,7 @@ namespace Server.Game
                     newPlayer.Session.Send(enterPacket);
 
                     S_Spawn spawnPacket = new S_Spawn();
-                    foreach (Player player in _players)
+                    foreach (Player player in _players.Values)
                     {
                         if (newPlayer != player)
                             spawnPacket.Players.Add(player.Info);
@@ -40,7 +46,7 @@ namespace Server.Game
                 {
                     S_Spawn spawnPacket = new S_Spawn();
                     spawnPacket.Players.Add(newPlayer.Info);
-                    foreach (Player player in _players)
+                    foreach (Player player in _players.Values)
                     {
                         if (newPlayer != player)
                             player.Session.Send(spawnPacket);
@@ -53,11 +59,11 @@ namespace Server.Game
         {
             lock (_lock)
             {
-                Player player = _players.Find(p => p.Info.PlayerID == playerID);
-                if (null == player)
+                Player player = null;
+
+                if (_players.Remove(playerID, out player) == false)
                     return;
 
-                _players.Remove(player);
                 player.Room = null;
 
                 {
@@ -68,7 +74,7 @@ namespace Server.Game
                 {
                     S_Despawn despawnPacket = new S_Despawn();
                     despawnPacket.PlayerIDs.Add(player.Info.PlayerID);
-                    foreach (Player p in _players)
+                    foreach (Player p in _players.Values)
                     {
                         if (player != p)
                             p.Session.Send(despawnPacket);
@@ -84,10 +90,18 @@ namespace Server.Game
 
             lock (_lock)
             {
-                // TODO: Valid Check
-
+                PositionInfo movePosInfo = movePacket.PosInfo;
                 PlayerInfo info = player.Info;
-                info.PosInfo = movePacket.PosInfo;
+
+                if (movePosInfo.PosX != info.PosInfo.PosX || movePosInfo.PosY != info.PosInfo.PosY)
+                {
+                    if (_map.CanGo(new Vector2Int(movePosInfo.PosX, movePosInfo.PosY)) == false)
+                        return;
+                }
+
+                info.PosInfo.State = movePosInfo.State;
+                info.PosInfo.MoveDir = movePosInfo.MoveDir;
+                _map.ApplyMove(player, new Vector2Int(movePosInfo.PosX, movePosInfo.PosY));
 
                 S_Move resMovePacket = new S_Move();
                 resMovePacket.PlayerID = player.Info.PlayerID;
@@ -115,6 +129,13 @@ namespace Server.Game
                 skill.PlayerID = info.PlayerID;
                 skill.Info.SkillID = 1;
                 Broadcast(skill);
+
+                Vector2Int skillPos = player.GetFrontCellPos(info.PosInfo.MoveDir);
+                Player target = _map.Find(skillPos);
+                if (target != null)
+                {
+
+                }
             }
         }
 
@@ -122,7 +143,7 @@ namespace Server.Game
         {
             lock (_lock)
             {
-                foreach (Player player in _players)
+                foreach (Player player in _players.Values)
                 {
                     player.Session.Send(packet);
                 }
