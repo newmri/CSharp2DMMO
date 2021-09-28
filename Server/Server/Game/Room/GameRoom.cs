@@ -3,6 +3,7 @@ using Google.Protobuf.Protocol;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Server.Data;
 
 namespace Server.Game
 {
@@ -189,29 +190,38 @@ namespace Server.Game
                 skill.Info.SkillID = skillPacket.Info.SkillID;
                 Broadcast(skill);
 
-                if (skillPacket.Info.SkillID == 1)
+                Data.Skill skillData = null;
+                if (DataManager.SkillDict.TryGetValue(skillPacket.Info.SkillID, out skillData) == false)
+                    return;
+
+                switch (skillData.skillType)
                 {
-                    Vector2Int skillPos = player.GetFrontCellPos(info.PosInfo.MoveDir);
-                    GameObject target = Map.Find(skillPos);
-                    if (target != null)
-                    {
+                    case SkillType.SkillAuto:
+                        {
+                            Vector2Int skillPos = player.GetFrontCellPos(info.PosInfo.MoveDir);
+                            GameObject target = Map.Find(skillPos);
+                            if (target != null)
+                            {
 
-                    }
-                }
+                            }
+                        }
+                        break;
+                    case SkillType.SkillProjectile:
+                        {
+                            Arrow arrow = ObjectManager.Instance.Add<Arrow>();
+                            if (null == arrow)
+                                return;
 
-                else if (skillPacket.Info.SkillID == 2)
-                {
-                    Arrow arrow = ObjectManager.Instance.Add<Arrow>();
-                    if (null == arrow)
-                        return;
+                            arrow.Owner = player;
+                            arrow.Data = skillData;
 
-                    arrow.Owner = player;
-                    arrow.PosInfo.State = CreatureState.Moving;
-                    arrow.PosInfo.MoveDir = player.PosInfo.MoveDir;
-                    arrow.PosInfo.PosX = player.PosInfo.PosX;
-                    arrow.PosInfo.PosY = player.PosInfo.PosY;
-                    EnterGame(arrow);
-
+                            arrow.PosInfo.State = CreatureState.Moving;
+                            arrow.PosInfo.MoveDir = player.PosInfo.MoveDir;
+                            arrow.PosInfo.PosX = player.PosInfo.PosX;
+                            arrow.PosInfo.PosY = player.PosInfo.PosY;
+                            EnterGame(arrow);
+                        }
+                        break;
                 }
             }
         }
