@@ -9,28 +9,55 @@ public class ObjectManager
 	Dictionary<int, GameObject> _objects = new Dictionary<int, GameObject>();
 	public MyPlayerController MyPlayer { get; set; }
 
-	public void Add(PlayerInfo info, bool myPlayer = false)
+	public static GameObjectType GetObjectType(int ID)
 	{
-		if (myPlayer)
+		int type = (ID >> 24) & 0x7F;
+		return (GameObjectType)type;
+	}
+
+	public void Add(ObjectInfo info, bool myPlayer = false)
+	{
+		GameObjectType objectType = GetObjectType(info.ObjectID);
+
+		if (objectType == GameObjectType.Player)
 		{
-			GameObject gameObject = Managers.Resource.Instantiate("Creature/MyPlayer");
-			gameObject.name = info.Name;
-			_objects.Add(info.PlayerID, gameObject);
-			MyPlayer = gameObject.GetComponent<MyPlayerController>();
-			MyPlayer.ID = info.PlayerID;
-			MyPlayer.PosInfo = info.PosInfo;
-			MyPlayer.SyncPos();
+			if (myPlayer)
+			{
+				GameObject gameObject = Managers.Resource.Instantiate("Creature/MyPlayer");
+				gameObject.name = info.Name;
+				_objects.Add(info.ObjectID, gameObject);
+				MyPlayer = gameObject.GetComponent<MyPlayerController>();
+				MyPlayer.ID = info.ObjectID;
+				MyPlayer.PosInfo = info.PosInfo;
+				MyPlayer.SyncPos();
+			}
+
+			else
+			{
+				GameObject gameObject = Managers.Resource.Instantiate("Creature/Player");
+				gameObject.name = info.Name;
+				_objects.Add(info.ObjectID, gameObject);
+				PlayerController playerController = gameObject.GetComponent<PlayerController>();
+				playerController.ID = info.ObjectID;
+				playerController.PosInfo = info.PosInfo;
+				playerController.SyncPos();
+			}
 		}
 
-		else
+		else if (objectType == GameObjectType.Monster)
 		{
-			GameObject gameObject = Managers.Resource.Instantiate("Creature/Player");
-			gameObject.name = info.Name;
-			_objects.Add(info.PlayerID, gameObject);
-			PlayerController playerController = gameObject.GetComponent<PlayerController>();
-			playerController.ID = info.PlayerID;
-			playerController.PosInfo = info.PosInfo;
-			playerController.SyncPos();
+
+		}
+		else if (objectType == GameObjectType.Projectile)
+		{
+			GameObject gameObject = Managers.Resource.Instantiate("Creature/Arrow");
+			gameObject.name = "Arrow";
+			_objects.Add(info.ObjectID, gameObject);
+
+			ArrowController arrowController = gameObject.GetComponent<ArrowController>();
+			arrowController.Dir = info.PosInfo.MoveDir;
+			arrowController.CellPos = new Vector3Int(info.PosInfo.PosX, info.PosInfo.PosY, 0);
+			arrowController.SyncPos();
 		}
 	}
 
