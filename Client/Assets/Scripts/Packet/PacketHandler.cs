@@ -71,4 +71,19 @@ class PacketHandler
 
 		playerController.UseSkill(skillPacket.Info.SkillID);
 	}
+
+	public static void S_ChangeHpHandler(PacketSession session, IMessage packet)
+	{
+		S_ChangeHp changePacket = packet as S_ChangeHp;
+
+		GameObject gameObject = Managers.Object.Find(changePacket.ObjectID);
+		if (null == gameObject)
+			return;
+
+		CreatureController creatureController = gameObject.GetComponent<CreatureController>();
+		if (null == creatureController)
+			return;
+
+		creatureController.Stat.Hp = changePacket.Hp;
+	}
 }

@@ -29,6 +29,7 @@ public class ObjectManager
 				MyPlayer = gameObject.GetComponent<MyPlayerController>();
 				MyPlayer.ID = info.ObjectID;
 				MyPlayer.PosInfo = info.PosInfo;
+				MyPlayer.Stat = info.StatInfo;
 				MyPlayer.SyncPos();
 			}
 
@@ -40,6 +41,8 @@ public class ObjectManager
 				PlayerController playerController = gameObject.GetComponent<PlayerController>();
 				playerController.ID = info.ObjectID;
 				playerController.PosInfo = info.PosInfo;
+				playerController.Stat = info.StatInfo;
+
 				playerController.SyncPos();
 			}
 		}
@@ -55,8 +58,8 @@ public class ObjectManager
 			_objects.Add(info.ObjectID, gameObject);
 
 			ArrowController arrowController = gameObject.GetComponent<ArrowController>();
-			arrowController.Dir = info.PosInfo.MoveDir;
-			arrowController.CellPos = new Vector3Int(info.PosInfo.PosX, info.PosInfo.PosY, 0);
+			arrowController.PosInfo = info.PosInfo;
+			arrowController.Stat = info.StatInfo;
 			arrowController.SyncPos();
 		}
 	}
