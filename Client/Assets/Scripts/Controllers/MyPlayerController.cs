@@ -1,4 +1,4 @@
-using Google.Protobuf.Protocol;
+Ôªøusing Google.Protobuf.Protocol;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -8,10 +8,10 @@ public class MyPlayerController : PlayerController
 {
 	bool _moveKeyPressed = false;
 
-    protected override void Init()
-    {
-        base.Init();
-    }
+	protected override void Init()
+	{
+		base.Init();
+	}
 
 	protected override void UpdateController()
 	{
@@ -28,7 +28,40 @@ public class MyPlayerController : PlayerController
 		base.UpdateController();
 	}
 
-	// ≈∞∫∏µÂ ¿‘∑¬
+	protected override void UpdateIdle()
+	{
+		// Ïù¥Îèô ÏÉÅÌÉúÎ°ú Í∞àÏßÄ ÌôïÏù∏
+		if (_moveKeyPressed)
+		{
+			State = CreatureState.Moving;
+			return;
+		}
+
+		if (_coSkillCooltime == null && Input.GetKey(KeyCode.Space))
+		{
+			Debug.Log("Skill !");
+
+			C_Skill skill = new C_Skill() { Info = new SkillInfo() };
+			skill.Info.SkillId = 2;
+			Managers.Network.Send(skill);
+
+			_coSkillCooltime = StartCoroutine("CoInputCooltime", 0.2f);
+		}
+	}
+
+	Coroutine _coSkillCooltime;
+	IEnumerator CoInputCooltime(float time)
+	{
+		yield return new WaitForSeconds(time);
+		_coSkillCooltime = null;
+	}
+
+	void LateUpdate()
+	{
+		Camera.main.transform.position = new Vector3(transform.position.x, transform.position.y, -10);
+	}
+
+	// ÌÇ§Î≥¥Îìú ÏûÖÎ†•
 	void GetDirInput()
 	{
 		_moveKeyPressed = true;
@@ -53,39 +86,6 @@ public class MyPlayerController : PlayerController
 		{
 			_moveKeyPressed = false;
 		}
-	}
-
-	void LateUpdate()
-	{
-		Camera.main.transform.position = new Vector3(transform.position.x, transform.position.y, -10);
-	}
-
-	protected override void UpdateIdle()
-	{
-		// ¿Ãµø ªÛ≈¬∑Œ ∞•¡ˆ »Æ¿Œ
-		if (_moveKeyPressed)
-		{
-			State = CreatureState.Moving;
-			return;
-		}
-
-		// Ω∫≈≥ ªÛ≈¬∑Œ ∞•¡ˆ »Æ¿Œ
-		if (_coSkillCoolTime == null && Input.GetKey(KeyCode.Space))
-		{
-			Debug.Log("Skill!");
-			C_Skill skill = new C_Skill() { Info = new SkillInfo() };
-			skill.Info.SkillID = 2;
-			Managers.Network.Send(skill);
-
-			_coSkillCoolTime = StartCoroutine("CoInputCooltime", 0.2f);
-		}
-	}
-
-	Coroutine _coSkillCoolTime;
-	IEnumerator CoInputCooltime(float time)
-	{
-		yield return new WaitForSeconds(time);
-		_coSkillCoolTime = null;
 	}
 
 	protected override void MoveToNextPos()

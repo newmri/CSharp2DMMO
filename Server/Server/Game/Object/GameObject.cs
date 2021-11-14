@@ -1,22 +1,23 @@
-﻿using Google.Protobuf;
-using Google.Protobuf.Protocol;
+﻿using Google.Protobuf.Protocol;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
 namespace Server.Game
 {
-    public class GameObject
-    {
-        public GameObjectType ObjectType { get; protected set; }
-		public int ID
+	public class GameObject
+	{
+		public GameObjectType ObjectType { get; protected set; } = GameObjectType.None;
+		public int Id
 		{
-			get { return Info.ObjectID; }
-			set { Info.ObjectID = value; }
+			get { return Info.ObjectId; }
+			set { Info.ObjectId = value; }
 		}
 
-        public ObjectInfo Info { get; set; } = new ObjectInfo();
-        public PositionInfo PosInfo { get; private set; } = new PositionInfo();
+		public GameRoom Room { get; set; }
+
+		public ObjectInfo Info { get; set; } = new ObjectInfo();
+		public PositionInfo PosInfo { get; private set; } = new PositionInfo();
 		public StatInfo Stat { get; private set; } = new StatInfo();
 
 		public float Speed
@@ -25,13 +26,10 @@ namespace Server.Game
 			set { Stat.Speed = value; }
 		}
 
-        public GameRoom Room { get; set; }
-
-        public GameObject()
-        {
-            Info.PosInfo = PosInfo;
+		public GameObject()
+		{
+			Info.PosInfo = PosInfo;
 			Info.StatInfo = Stat;
-
 		}
 
 		public Vector2Int CellPos
@@ -80,15 +78,15 @@ namespace Server.Game
 		{
 			Stat.Hp = Math.Max(Stat.Hp - damage, 0);
 
+			S_ChangeHp changePacket = new S_ChangeHp();
+			changePacket.ObjectId = Id;
+			changePacket.Hp = Stat.Hp;
+			Room.Broadcast(changePacket);
+
 			if (Stat.Hp <= 0)
 			{
 				OnDead(attacker);
 			}
-
-			S_ChangeHp changePacket = new S_ChangeHp();
-			changePacket.ObjectID = ID;
-			changePacket.Hp = Stat.Hp;
-			Room.Broadcast(changePacket);
 		}
 
 		public virtual void OnDead(GameObject attacker)

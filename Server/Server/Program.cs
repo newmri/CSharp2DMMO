@@ -9,9 +9,9 @@ using System.Threading.Tasks;
 using Google.Protobuf;
 using Google.Protobuf.Protocol;
 using Google.Protobuf.WellKnownTypes;
+using Server.Data;
 using Server.Game;
 using ServerCore;
-using Server.Data;
 
 namespace Server
 {
@@ -29,8 +29,6 @@ namespace Server
 			ConfigManager.LoadConfig();
 			DataManager.LoadData();
 
-			var d = DataManager.StatDict;
-
 			RoomManager.Instance.Add(1);
 
 			// DNS (Domain Name System)
@@ -43,12 +41,13 @@ namespace Server
 			Console.WriteLine("Listening...");
 
 			//FlushRoom();
-			JobTimer.Instance.Push(FlushRoom);
+			//JobTimer.Instance.Push(FlushRoom);
 
+			// TODO
 			while (true)
 			{
+				//JobTimer.Instance.Flush();
 				RoomManager.Instance.Find(1).Update();
-
 				//Thread.Sleep(100);
 			}
 		}

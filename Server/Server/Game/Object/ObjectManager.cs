@@ -5,75 +5,75 @@ using System.Text;
 
 namespace Server.Game
 {
-    public class ObjectManager
-    {
-        public static ObjectManager Instance { get; } = new ObjectManager();
+	public class ObjectManager
+	{
+		public static ObjectManager Instance { get; } = new ObjectManager();
 
-        object _lock = new object();
-        Dictionary<int, Player> _players = new Dictionary<int, Player>();
-        
-        // [UNUSED(1)][TYPE(7)][ID(24)]
-        int _counter = 0;
+		object _lock = new object();
+		Dictionary<int, Player> _players = new Dictionary<int, Player>();
 
-        public T Add<T>() where T : GameObject, new()
-        {
-            T gameObject = new T();
+		// [UNUSED(1)][TYPE(7)][ID(24)]
+		int _counter = 0;
 
-            lock (_lock)
-            {
-                gameObject.ID = GenerateID(gameObject.ObjectType);
+		public T Add<T>() where T : GameObject, new()
+		{
+			T gameObject = new T();
 
-                if (gameObject.ObjectType == GameObjectType.Player)
-                {
-                    _players.Add(gameObject.ID, gameObject as Player);
-                }
-            }
+			lock (_lock)
+			{
+				gameObject.Id = GenerateId(gameObject.ObjectType);
 
-            return gameObject;
-        }
+				if (gameObject.ObjectType == GameObjectType.Player)
+				{
+					_players.Add(gameObject.Id, gameObject as Player);
+				}
+			}
 
-        int GenerateID(GameObjectType type)
-        {
-            lock (_lock)
-            {
-                return ((int)type << 24) | (_counter++);
-            }
-        }
+			return gameObject;
+		}
 
-        public static GameObjectType GetObjectType(int ID)
-        {
-            int type = (ID >> 24) & 0x7F;
-            return (GameObjectType)type;
-        }
+		int GenerateId(GameObjectType type)
+		{
+			lock (_lock)
+			{
+				return ((int)type << 24) | (_counter++);
+			}
+		}
 
-        public bool Remove(int objectID)
-        {
-            GameObjectType objectType = GetObjectType(objectID);
+		public static GameObjectType GetObjectTypeById(int id)
+		{
+			int type = (id >> 24) & 0x7F;
+			return (GameObjectType)type;
+		}
 
-            lock (_lock)
-            {
-                if(objectType == GameObjectType.Player)
-                    return _players.Remove(objectID);
-            }
+		public bool Remove(int objectId)
+		{
+			GameObjectType objectType = GetObjectTypeById(objectId);
 
-            return false;
-        }
+			lock (_lock)
+			{
+				if (objectType == GameObjectType.Player)
+					return _players.Remove(objectId);
+			}
 
-        public Player Find(int objectID)
-        {
-            GameObjectType objectType = GetObjectType(objectID);
+			return false;
+		}
 
-            lock (_lock)
-            {
-                if (objectType == GameObjectType.Player)
-                {
-                    Player player = null;
-                    if (_players.TryGetValue(objectID, out player))
-                        return player;
-                }
-            }
+		public Player Find(int objectId)
+		{
+			GameObjectType objectType = GetObjectTypeById(objectId);
 
-            return null;
-        }
-    }
+			lock (_lock)
+			{
+				if (objectType == GameObjectType.Player)
+				{
+					Player player = null;
+					if (_players.TryGetValue(objectId, out player))
+						return player;
+				}
+			}
+
+			return null;
+		}
+	}
 }

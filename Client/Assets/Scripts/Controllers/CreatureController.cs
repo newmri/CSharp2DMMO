@@ -7,7 +7,7 @@ using static Define;
 
 public class CreatureController : MonoBehaviour
 {
-	public int ID { get; set; }
+	public int Id { get; set; }
 
 	StatInfo _stat = new StatInfo();
 	public StatInfo Stat
@@ -33,7 +33,6 @@ public class CreatureController : MonoBehaviour
 	protected bool _updated = false;
 
 	PositionInfo _positionInfo = new PositionInfo();
-
 	public PositionInfo PosInfo
 	{
 		get { return _positionInfo; }
@@ -54,8 +53,8 @@ public class CreatureController : MonoBehaviour
 		transform.position = destPos;
 	}
 
-	public Vector3Int CellPos
-	{
+	public Vector3Int CellPos 
+	{ 
 		get
 		{
 			return new Vector3Int(PosInfo.PosX, PosInfo.PosY, 0);
@@ -280,7 +279,7 @@ public class CreatureController : MonoBehaviour
 
 	protected virtual void MoveToNextPos()
 	{
-	
+		
 	}
 
 	protected virtual void UpdateSkill()

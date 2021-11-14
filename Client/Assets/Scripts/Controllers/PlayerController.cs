@@ -92,17 +92,17 @@ public class PlayerController : CreatureController
 	}
 
 	protected override void UpdateController()
-	{
+	{		
 		base.UpdateController();
 	}
 
-	public void UseSkill(int skillID)
+	public void UseSkill(int skillId)
 	{
-		if (1 == skillID)
+		if (skillId == 1)
 		{
 			_coSkill = StartCoroutine("CoStartPunch");
 		}
-		else if (2 == skillID)
+		else if (skillId == 2)
 		{
 			_coSkill = StartCoroutine("CoStartShootArrow");
 		}

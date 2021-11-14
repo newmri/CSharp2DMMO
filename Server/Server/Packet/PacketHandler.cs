@@ -17,13 +17,11 @@ class PacketHandler
 		Console.WriteLine($"C_Move ({movePacket.PosInfo.PosX}, {movePacket.PosInfo.PosY})");
 
 		Player player = clientSession.MyPlayer;
-
-		if (null == player)
+		if (player == null)
 			return;
 
 		GameRoom room = player.Room;
-
-		if (null == room)
+		if (room == null)
 			return;
 
 		room.HandleMove(player, movePacket);
@@ -35,13 +33,11 @@ class PacketHandler
 		ClientSession clientSession = session as ClientSession;
 
 		Player player = clientSession.MyPlayer;
-
-		if (null == player)
+		if (player == null)
 			return;
 
 		GameRoom room = player.Room;
-
-		if (null == room)
+		if (room == null)
 			return;
 
 		room.HandleSkill(player, skillPacket);

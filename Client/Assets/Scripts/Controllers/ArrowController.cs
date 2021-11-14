@@ -6,7 +6,6 @@ using static Define;
 
 public class ArrowController : CreatureController
 {
-
 	protected override void Init()
 	{
 		switch (Dir)

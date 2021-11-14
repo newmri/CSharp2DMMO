@@ -41,9 +41,9 @@ namespace Server.Game
 		public static Vector2Int left { get { return new Vector2Int(-1, 0); } }
 		public static Vector2Int right { get { return new Vector2Int(1, 0); } }
 
-		public static Vector2Int operator+(Vector2Int l, Vector2Int r)
+		public static Vector2Int operator+(Vector2Int a, Vector2Int b)
 		{
-			return new Vector2Int(l.x + r.x, l.y + r.y);
+			return new Vector2Int(a.x + b.x, a.y + b.y);
 		}
 	}
 
@@ -69,7 +69,7 @@ namespace Server.Game
 
 			int x = cellPos.x - MinX;
 			int y = MaxY - cellPos.y;
-			return !_collision[y, x] && (!checkObjects || _objects[y,x] == null);
+			return !_collision[y, x] && (!checkObjects || _objects[y, x] == null);
 		}
 
 		public GameObject Find(Vector2Int cellPos)
@@ -86,7 +86,7 @@ namespace Server.Game
 
 		public bool ApplyLeave(GameObject gameObject)
 		{
-			PositionInfo posInfo = gameObject.Info.PosInfo;
+			PositionInfo posInfo = gameObject.PosInfo;
 			if (posInfo.PosX < MinX || posInfo.PosX > MaxX)
 				return false;
 			if (posInfo.PosY < MinY || posInfo.PosY > MaxY)
@@ -95,7 +95,6 @@ namespace Server.Game
 			{
 				int x = posInfo.PosX - MinX;
 				int y = MaxY - posInfo.PosY;
-
 				if (_objects[y, x] == gameObject)
 					_objects[y, x] = null;
 			}
@@ -105,12 +104,10 @@ namespace Server.Game
 
 		public bool ApplyMove(GameObject gameObject, Vector2Int dest)
 		{
-			if (!ApplyLeave(gameObject))
-				return false;
+			ApplyLeave(gameObject);
 
-			PositionInfo posInfo = gameObject.Info.PosInfo;
-
-			if (CanGo(dest) == false)
+			PositionInfo posInfo = gameObject.PosInfo;
+			if (CanGo(dest, true) == false)
 				return false;
 
 			{
@@ -119,9 +116,9 @@ namespace Server.Game
 				_objects[y, x] = gameObject;
 			}
 
+			// 실제 좌표 이동
 			posInfo.PosX = dest.x;
 			posInfo.PosY = dest.y;
-
 			return true;
 		}
 

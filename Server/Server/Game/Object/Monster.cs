@@ -5,11 +5,11 @@ using System.Text;
 
 namespace Server.Game
 {
-    public class Monster : GameObject
-    {
-        public Monster()
-        {
-            ObjectType = GameObjectType.Monster;
-        }
-    }
+	public class Monster : GameObject
+	{
+		public Monster()
+		{
+			ObjectType = GameObjectType.Monster;
+		}
+	}
 }

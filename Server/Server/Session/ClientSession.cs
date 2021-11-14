@@ -21,14 +21,12 @@ namespace Server
 		public void Send(IMessage packet)
 		{
 			string msgName = packet.Descriptor.Name.Replace("_", string.Empty);
-			MsgId msgID = (MsgId)Enum.Parse(typeof(MsgId), msgName);
-
+			MsgId msgId = (MsgId)Enum.Parse(typeof(MsgId), msgName);
 			ushort size = (ushort)packet.CalculateSize();
 			byte[] sendBuffer = new byte[size + 4];
 			Array.Copy(BitConverter.GetBytes((ushort)(size + 4)), 0, sendBuffer, 0, sizeof(ushort));
-			Array.Copy(BitConverter.GetBytes((ushort)msgID), 0, sendBuffer, 2, sizeof(ushort));
+			Array.Copy(BitConverter.GetBytes((ushort)msgId), 0, sendBuffer, 2, sizeof(ushort));
 			Array.Copy(packet.ToByteArray(), 0, sendBuffer, 4, size);
-
 			Send(new ArraySegment<byte>(sendBuffer));
 		}
 
@@ -38,7 +36,7 @@ namespace Server
 
 			MyPlayer = ObjectManager.Instance.Add<Player>();
 			{
-				MyPlayer.Info.Name = $"Player_{MyPlayer.Info.ObjectID}";
+				MyPlayer.Info.Name = $"Player_{MyPlayer.Info.ObjectId}";
 				MyPlayer.Info.PosInfo.State = CreatureState.Idle;
 				MyPlayer.Info.PosInfo.MoveDir = MoveDir.Down;
 				MyPlayer.Info.PosInfo.PosX = 0;
@@ -61,7 +59,7 @@ namespace Server
 
 		public override void OnDisconnected(EndPoint endPoint)
 		{
-			RoomManager.Instance.Find(1).LeaveGame(MyPlayer.Info.ObjectID);
+			RoomManager.Instance.Find(1).LeaveGame(MyPlayer.Info.ObjectId);
 
 			SessionManager.Instance.Remove(this);
 

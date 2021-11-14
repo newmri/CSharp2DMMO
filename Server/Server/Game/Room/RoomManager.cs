@@ -4,47 +4,47 @@ using System.Text;
 
 namespace Server.Game
 {
-    public class RoomManager
-    {
-        public static RoomManager Instance { get; } = new RoomManager();
+	public class RoomManager
+	{
+		public static RoomManager Instance { get; } = new RoomManager();
 
-        object _lock = new object();
-        Dictionary<int, GameRoom> _rooms = new Dictionary<int, GameRoom>();
-        int _roomID = 1;
+		object _lock = new object();
+		Dictionary<int, GameRoom> _rooms = new Dictionary<int, GameRoom>();
+		int _roomId = 1;
 
-        public GameRoom Add(int mapID)
-        {
-            GameRoom gameRoom = new GameRoom();
-            gameRoom.Init(mapID);
+		public GameRoom Add(int mapId)
+		{
+			GameRoom gameRoom = new GameRoom();
+			gameRoom.Init(mapId);
 
-            lock (_lock)
-            {
-                gameRoom.RoomID = _roomID;
-                _rooms.Add(_roomID, gameRoom);
-                ++_roomID;
-            }
+			lock (_lock)
+			{
+				gameRoom.RoomId = _roomId;
+				_rooms.Add(_roomId, gameRoom);
+				_roomId++;
+			}
 
-            return gameRoom;
-        }
+			return gameRoom;
+		}
 
-        public bool Remove(int roomID)
-        {
-            lock (_lock)
-            {
-                return _rooms.Remove(roomID);
-            }
-        }
+		public bool Remove(int roomId)
+		{
+			lock (_lock)
+			{
+				return _rooms.Remove(roomId);
+			}
+		}
 
-        public GameRoom Find(int roomID)
-        {
-            lock (_lock)
-            {
-                GameRoom room = null;
-                if (_rooms.TryGetValue(roomID, out room))
-                    return room;
+		public GameRoom Find(int roomId)
+		{
+			lock (_lock)
+			{
+				GameRoom room = null;
+				if (_rooms.TryGetValue(roomId, out room))
+					return room;
 
-                return null;
-            }
-        }
-    }
+				return null;
+			}
+		}
+	}
 }
