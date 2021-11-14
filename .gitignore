@@ -6,7 +6,6 @@
 ###################
 *.com
 *.class
-*.dll
 *.exe
 *.pdb
 *.dll.config
@@ -23,7 +22,6 @@ _UpgradeReport_Files/
 ###############
 # Directories #
 ###############
-bin/
 obj/
 TestResults/
 ###################
