@@ -45,6 +45,17 @@ namespace Server.Game
 		{
 			return new Vector2Int(a.x + b.x, a.y + b.y);
 		}
+
+		public static Vector2Int operator -(Vector2Int a, Vector2Int b)
+		{
+			return new Vector2Int(a.x - b.x, a.y - b.y);
+		}
+
+		public float Magnitude { get { return (float)Math.Sqrt(sqrMagnitude); } }
+
+		public int sqrMagnitude { get { return (x * x + y * y); } }
+
+		public int cellDistFromZero { get { return Math.Abs(x) + Math.Abs(y); } }
 	}
 
 	public class Map
