@@ -49,6 +49,8 @@ namespace Server.Game
 					_players.Add(gameObject.Id, player);
 					player.Room = this;
 
+					Map.ApplyMove(player, new Vector2Int(player.CellPos.x, player.CellPos.y));
+
 					// 본인한테 정보 전송
 					{
 						S_EnterGame enterPacket = new S_EnterGame();
@@ -61,6 +63,13 @@ namespace Server.Game
 							if (player != p)
 								spawnPacket.Objects.Add(p.Info);
 						}
+
+						foreach (Monster monster in _monsters.Values)
+							spawnPacket.Objects.Add(monster.Info);
+
+						foreach (Projectile projectile in _projectiles.Values)
+							spawnPacket.Objects.Add(projectile.Info);
+
 						player.Session.Send(spawnPacket);
 					}
 				}
@@ -69,12 +78,14 @@ namespace Server.Game
 					Monster monster = gameObject as Monster;
 					_monsters.Add(gameObject.Id, monster);
 					monster.Room = this;
+					Map.ApplyMove(monster, new Vector2Int(monster.CellPos.x, monster.CellPos.y));
 				}
 				else if (type == GameObjectType.Projectile)
 				{
 					Projectile projectile = gameObject as Projectile;
 					_projectiles.Add(gameObject.Id, projectile);
 					projectile.Room = this;
+					Map.ApplyMove(projectile, new Vector2Int(projectile.CellPos.x, projectile.CellPos.y));
 				}
 			
 				// 타인한테 정보 전송
