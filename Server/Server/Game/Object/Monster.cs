@@ -1,4 +1,5 @@
 ﻿using Google.Protobuf.Protocol;
+using Server.Data;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -62,6 +63,7 @@ namespace Server.Game
 			State = CreatureState.Moving;
 		}
 
+		int _skillRange = 1;
 		long _nextMoveTick = 0;
 		protected virtual void UpdateMoving()
 		{
@@ -74,14 +76,17 @@ namespace Server.Game
 			{
 				_target = null;
 				State = CreatureState.Idle;
+				BroadcastMove();
 				return;
 			}
 
-			int dist = (_target.CellPos - CellPos).cellDistFromZero;
+			Vector2Int dir = _target.CellPos - CellPos;
+			int dist = dir.cellDistFromZero;
 			if (dist == 0 || dist > _chaseCellDist)
 			{
 				_target = null;
 				State = CreatureState.Idle;
+				BroadcastMove();
 				return;
 			}
 
@@ -90,21 +95,78 @@ namespace Server.Game
 			{
 				_target = null;
 				State = CreatureState.Idle;
+				BroadcastMove();
+				return;
+			}
+
+			if (dist <= _skillRange && (dir.x == 0 || dir.y == 0))
+			{
+				State = CreatureState.Skill;
+				_coolTick = 0;
 				return;
 			}
 
 			Dir = GetDirFromVec(path[1] - CellPos);
 			Room.Map.ApplyMove(this, path[1]);
+			BroadcastMove();
+		}
 
+		void BroadcastMove()
+		{
 			S_Move movePacket = new S_Move();
 			movePacket.ObjectId = Id;
 			movePacket.PosInfo = PosInfo;
 			Room.Broadcast(movePacket);
 		}
 
+		long _coolTick = 0;
 		protected virtual void UpdateSkill()
 		{
+			if (_coolTick == 0)
+			{
+				if (_target == null || _target.Room != Room || _target.Hp == 0)
+				{
+					_target = null;
+					State = CreatureState.Moving;
+					BroadcastMove();
+					return;
+				}
 
+				Vector2Int dir = _target.CellPos - CellPos;
+				int dist = dir.cellDistFromZero;
+				bool canUseSkil = (dist <= _skillRange && (dir.x == 0 || dir.y == 0));
+				if (canUseSkil == false)
+				{
+					State = CreatureState.Moving;
+					BroadcastMove();
+					return;
+				}
+
+				MoveDir lookDir = GetDirFromVec(dir);
+				if (Dir != lookDir)
+				{
+					Dir = lookDir;
+					BroadcastMove();
+				}
+
+				Skill skillData = null;
+				DataManager.SkillDict.TryGetValue(1, out skillData);
+
+				_target.OnDamaged(this, skillData.damage + Stat.Attack);
+
+				S_Skill skill = new S_Skill() { Info = new SkillInfo() };
+				skill.ObjectId = Id;
+				skill.Info.SkillId = skillData.id;
+				Room.Broadcast(skill);
+
+				int coolTick = (int)(1000 * skillData.cooldown);
+				_coolTick = Environment.TickCount64 + coolTick;
+			}
+
+			if (_coolTick > Environment.TickCount64)
+				return;
+
+			_coolTick = 0;
 		}
 
 		protected virtual void UpdateDead()
