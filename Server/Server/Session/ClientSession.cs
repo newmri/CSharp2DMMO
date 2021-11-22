@@ -34,6 +34,11 @@ namespace Server
 		{
 			Console.WriteLine($"OnConnected : {endPoint}");
 
+			{
+				S_Connected connectedPacket = new S_Connected();
+				Send(connectedPacket);
+			}
+
 			MyPlayer = ObjectManager.Instance.Add<Player>();
 			{
 				MyPlayer.Info.Name = $"Player_{MyPlayer.Info.ObjectId}";

@@ -1,9 +1,11 @@
 ﻿using Google.Protobuf;
 using Google.Protobuf.Protocol;
 using Server;
+using Server.DB;
 using Server.Game;
 using ServerCore;
 using System;
+using System.Linq;
 using System.Collections.Generic;
 using System.Text;
 
@@ -41,5 +43,29 @@ class PacketHandler
 			return;
 
 		room.Push(room.HandleSkill, player, skillPacket);
+	}
+
+	public static void C_LoginHandler(PacketSession session, IMessage packet)
+	{
+		C_Login loginPacket = packet as C_Login;
+		ClientSession clientSession = session as ClientSession;
+
+		Console.WriteLine($"UniqueId({loginPacket.UniqueId})");
+
+		using (AppDbContext db = new AppDbContext())
+		{
+			AccountDb findAccount = db.Accounts.Where(a => a.AccountName == loginPacket.UniqueId).FirstOrDefault();
+
+			if (findAccount == null)
+			{
+				AccountDb newAccount = new AccountDb() { AccountName = loginPacket.UniqueId };
+				db.Accounts.Add(newAccount);
+				db.SaveChanges();
+			}
+
+			S_Login loginOk = new S_Login() { LoginOk = 1 };
+			clientSession.Send(loginOk);
+
+		}
 	}
 }
