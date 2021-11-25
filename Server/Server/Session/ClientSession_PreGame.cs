@@ -1,5 +1,8 @@
 ﻿using Google.Protobuf.Protocol;
+using Microsoft.EntityFrameworkCore;
+using Server.Data;
 using Server.DB;
+using Server.Game;
 using ServerCore;
 using System;
 using System.Collections.Generic;
@@ -10,27 +13,151 @@ namespace Server
 {
     public partial class ClientSession : PacketSession
     {
+        public int AccountDbId { get; private set; }
+        public List<LobbyPlayerInfo> LobbyPlayers { get; set; } = new List<LobbyPlayerInfo>();
+
         public void HandleLogin(C_Login loginPacket)
         {
-			Console.WriteLine($"UniqueId({loginPacket.UniqueId})");
+            Console.WriteLine($"UniqueId({loginPacket.UniqueId})");
 
-			if (ServerState != PlayerServerState.ServerStateLogin)
-				return;
+            if (ServerState != PlayerServerState.ServerStateLogin)
+                return;
 
-			using (AppDbContext db = new AppDbContext())
-			{
-				AccountDb findAccount = db.Accounts.Where(a => a.AccountName == loginPacket.UniqueId).FirstOrDefault();
+            LobbyPlayers.Clear();
 
-				if (findAccount == null)
-				{
-					AccountDb newAccount = new AccountDb() { AccountName = loginPacket.UniqueId };
-					db.Accounts.Add(newAccount);
-					db.SaveChanges();
-				}
+            using (AppDbContext db = new AppDbContext())
+            {
+                AccountDb findAccount = db.Accounts
+                    .Include(a => a.Players)
+                    .Where(a => a.AccountName == loginPacket.UniqueId).FirstOrDefault();
 
-				S_Login loginOk = new S_Login() { LoginOk = 1 };
-				Send(loginOk);
-			}
-		}
+                if (findAccount != null)
+                {
+                    AccountDbId = findAccount.AccountDbId;
+
+                    S_Login loginOk = new S_Login() { LoginOk = 1 };
+
+                    foreach (PlayerDb playerDb in findAccount.Players)
+                    {
+                        LobbyPlayerInfo lobbyPlayer = new LobbyPlayerInfo()
+                        {
+                            Name = playerDb.PlayerName,
+                            StatInfo = new StatInfo()
+                            {
+                                Level = playerDb.Level,
+                                Hp = playerDb.Hp,
+                                MaxHp = playerDb.MaxHP,
+                                Attack = playerDb.Attack,
+                                Speed = playerDb.Speed,
+                                TotalExp = playerDb.TotalExp
+                            }
+                        };
+
+                        LobbyPlayers.Add(lobbyPlayer);
+                        loginOk.Players.Add(lobbyPlayer);
+                    }
+
+                    Send(loginOk);
+                    ServerState = PlayerServerState.ServerStateLobby;
+                }
+                else
+                {
+                    AccountDb newAccount = new AccountDb() { AccountName = loginPacket.UniqueId };
+                    db.Accounts.Add(newAccount);
+                    db.SaveChanges();
+
+                    AccountDbId = newAccount.AccountDbId;
+
+                    S_Login loginOk = new S_Login() { LoginOk = 1 };
+                    Send(loginOk);
+                    ServerState = PlayerServerState.ServerStateLobby;
+                }
+            }
+        }
+
+        public void HandleEnterGame(C_EnterGame enterGamePacket)
+        {
+            if (ServerState != PlayerServerState.ServerStateLobby)
+                return;
+
+            LobbyPlayerInfo playerInfo = LobbyPlayers.Find(p => p.Name == enterGamePacket.Name);
+            if (playerInfo == null)
+                return;
+
+            MyPlayer = ObjectManager.Instance.Add<Player>();
+            {
+                MyPlayer.Info.Name = playerInfo.Name;
+                MyPlayer.Info.PosInfo.State = CreatureState.Idle;
+                MyPlayer.Info.PosInfo.MoveDir = MoveDir.Down;
+                MyPlayer.Info.PosInfo.PosX = 0;
+                MyPlayer.Info.PosInfo.PosY = 0;
+
+                MyPlayer.Stat.MergeFrom(playerInfo.StatInfo);
+
+                MyPlayer.Session = this;
+            }
+
+            ServerState = PlayerServerState.ServerStateGame;
+
+            GameRoom room = RoomManager.Instance.Find(1);
+            room.Push(room.EnterGame, MyPlayer);
+        }
+
+        public void HandleCreatePlayer(C_CreatePlayer createPacket)
+        {
+            if (ServerState != PlayerServerState.ServerStateLobby)
+                return;
+
+            using (AppDbContext db = new AppDbContext())
+            {
+                PlayerDb findPlayer = db.Players.
+                    Where(p => p.PlayerName == createPacket.Name).FirstOrDefault();
+
+                if (findPlayer != null)
+                {
+                    Send(new S_CreatePlayer());
+                }
+                else
+                {
+                    StatInfo stat = null;
+                    DataManager.StatDict.TryGetValue(1, out stat);
+
+                    PlayerDb newPlayerDb = new PlayerDb()
+                    {
+                        PlayerName = createPacket.Name,
+                        Level = stat.Level,
+                        Hp = stat.Hp,
+                        MaxHP = stat.MaxHp,
+                        Attack = stat.Attack,
+                        Speed = stat.Speed,
+                        TotalExp = 0,
+                        AccountDBId = AccountDbId
+                    };
+
+                    db.Players.Add(newPlayerDb);
+                    db.SaveChanges();
+
+                    LobbyPlayerInfo lobbyPlayer = new LobbyPlayerInfo()
+                    {
+                        Name = createPacket.Name,
+                        StatInfo = new StatInfo()
+                        {
+                            Level = stat.Level,
+                            Hp = stat.Hp,
+                            MaxHp = stat.MaxHp,
+                            Attack = stat.Attack,
+                            Speed = stat.Speed,
+                            TotalExp = 0
+                        }
+                    };
+
+                    LobbyPlayers.Add(lobbyPlayer);
+
+                    S_CreatePlayer newPlayer = new S_CreatePlayer() { Player = new LobbyPlayerInfo() };
+                    newPlayer.Player.MergeFrom(lobbyPlayer);
+                    Send(newPlayer);
+                }
+            }
+        }
     }
 }

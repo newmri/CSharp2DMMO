@@ -113,6 +113,37 @@ class PacketHandler
 	{
 		S_Login loginPacket = packet as S_Login;
 		Debug.Log($"LoginOK({loginPacket.LoginOk})");
+
+		if (loginPacket.Players == null || loginPacket.Players.Count == 0)
+		{
+			C_CreatePlayer createPacket = new C_CreatePlayer();
+			createPacket.Name = $"Player{Random.Range(0, 10000).ToString("0000")}";
+			Managers.Network.Send(createPacket);
+		}
+		else
+		{
+			LobbyPlayerInfo info = loginPacket.Players[0];
+			C_EnterGame enterGamePacket = new C_EnterGame();
+			enterGamePacket.Name = info.Name;
+			Managers.Network.Send(enterGamePacket);
+		}
+	}
+
+	public static void S_CreatePlayerHandler(PacketSession session, IMessage packet)
+	{
+		S_CreatePlayer createPacket = packet as S_CreatePlayer;
+		if (createPacket.Player == null)
+		{
+			C_CreatePlayer createReqPacket = new C_CreatePlayer();
+			createReqPacket.Name = $"Player{Random.Range(0, 10000).ToString("0000")}";
+			Managers.Network.Send(createReqPacket);
+		}
+		else
+		{
+			C_EnterGame enterGamePacket = new C_EnterGame();
+			enterGamePacket.Name = createPacket.Player.Name;
+			Managers.Network.Send(enterGamePacket);
+		}
 	}
 }
 
