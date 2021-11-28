@@ -7,7 +7,7 @@ using Server.Data;
 
 namespace Server.DB
 {
-    class AppDbContext : DbContext
+    public class AppDbContext : DbContext
     {
         public DbSet<AccountDb> Accounts { get; set; }
         public DbSet<PlayerDb> Players { get; set; }

@@ -41,6 +41,7 @@ namespace Server
                     {
                         LobbyPlayerInfo lobbyPlayer = new LobbyPlayerInfo()
                         {
+                            PlayerDbId = playerDb.PlayerDbId,
                             Name = playerDb.PlayerName,
                             StatInfo = new StatInfo()
                             {
@@ -64,7 +65,9 @@ namespace Server
                 {
                     AccountDb newAccount = new AccountDb() { AccountName = loginPacket.UniqueId };
                     db.Accounts.Add(newAccount);
-                    db.SaveChanges();
+                    bool success = db.SaveChangesEx();
+                    if (success == false)
+                        return;
 
                     AccountDbId = newAccount.AccountDbId;
 
@@ -86,6 +89,7 @@ namespace Server
 
             MyPlayer = ObjectManager.Instance.Add<Player>();
             {
+                MyPlayer.PlayerDbId = playerInfo.PlayerDbId;
                 MyPlayer.Info.Name = playerInfo.Name;
                 MyPlayer.Info.PosInfo.State = CreatureState.Idle;
                 MyPlayer.Info.PosInfo.MoveDir = MoveDir.Down;
@@ -135,10 +139,13 @@ namespace Server
                     };
 
                     db.Players.Add(newPlayerDb);
-                    db.SaveChanges();
+                    bool success = db.SaveChangesEx();
+                    if (success == false)
+                        return;
 
                     LobbyPlayerInfo lobbyPlayer = new LobbyPlayerInfo()
                     {
+                        PlayerDbId = newPlayerDb.PlayerDbId,
                         Name = createPacket.Name,
                         StatInfo = new StatInfo()
                         {
