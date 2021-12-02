@@ -150,10 +150,19 @@ class PacketHandler
 	{
 		S_ItemList itemList = packet as S_ItemList;
 
-		foreach (ItemInfo item in itemList.Items)
+		UI_GameScene gameSceneUI = Managers.UI.SceneUI as UI_GameScene;
+		UI_Inventory invenUI = gameSceneUI.InvenUI;
+
+		Managers.Inventory.Clear();
+
+		foreach (ItemInfo itemInfo in itemList.Items)
 		{
-			Debug.Log($"{item.TemplateId} : {item.Count}");
+			Item item = Item.MakeItem(itemInfo);
+			Managers.Inventory.Add(item);
 		}
+
+		invenUI.gameObject.SetActive(true);
+		invenUI.RefreshUI();
 	}
 }
 
