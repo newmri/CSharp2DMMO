@@ -150,9 +150,6 @@ class PacketHandler
 	{
 		S_ItemList itemList = packet as S_ItemList;
 
-		UI_GameScene gameSceneUI = Managers.UI.SceneUI as UI_GameScene;
-		UI_Inventory invenUI = gameSceneUI.InvenUI;
-
 		Managers.Inventory.Clear();
 
 		foreach (ItemInfo itemInfo in itemList.Items)
@@ -160,9 +157,17 @@ class PacketHandler
 			Item item = Item.MakeItem(itemInfo);
 			Managers.Inventory.Add(item);
 		}
+	}
 
-		invenUI.gameObject.SetActive(true);
-		invenUI.RefreshUI();
+	public static void S_AddItemHandler(PacketSession session, IMessage packet)
+	{
+		S_AddItem addItem = packet as S_AddItem;
+
+		foreach (ItemInfo itemInfo in addItem.Items)
+		{
+			Item item = Item.MakeItem(itemInfo);
+			Managers.Inventory.Add(item);
+		}
 	}
 }
 

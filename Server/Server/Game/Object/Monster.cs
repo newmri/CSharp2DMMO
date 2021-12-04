@@ -1,5 +1,6 @@
 ﻿using Google.Protobuf.Protocol;
 using Server.Data;
+using Server.DB;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -8,15 +9,22 @@ namespace Server.Game
 {
 	public class Monster : GameObject
 	{
+		public int TemplateId { get; private set;}
+
 		public Monster()
 		{
 			ObjectType = GameObjectType.Monster;
 
-			Stat.Level = 1;
-			Stat.Hp = 100;
-			Stat.MaxHp = 100;
-			Stat.Speed = 5.0f;
+		}
 
+		public void Init(int templateId)
+		{
+			TemplateId = templateId;
+
+			MonsterData monsterData = null;
+			DataManager.MonsterDict.TryGetValue(TemplateId, out monsterData);
+			Stat.MergeFrom(monsterData.stat);
+			Stat.Hp = monsterData.stat.MaxHp;
 			State = CreatureState.Idle;
 		}
 
@@ -172,6 +180,41 @@ namespace Server.Game
 		protected virtual void UpdateDead()
 		{
 
+		}
+
+		public override void OnDead(GameObject attacker)
+		{
+			base.OnDead(attacker);
+
+			GameObject owner = attacker.GetOwner();
+
+			if (owner.ObjectType == GameObjectType.Player)
+			{
+				RewardData rewardData = GetRandomReward();
+				if (rewardData != null)
+				{
+					Player player = (Player)owner;
+					DbTransaction.RewardPlayer(player, rewardData, Room);
+				}
+			}
+		}
+
+		RewardData GetRandomReward()
+		{
+			MonsterData monsterData = null;
+			DataManager.MonsterDict.TryGetValue(TemplateId, out monsterData);
+
+			int rand = new Random().Next(0, 101);
+
+			int sum = 0;
+			foreach (RewardData rewardData in monsterData.rewards)
+			{
+				sum += rewardData.probability;
+				if (rand <= sum)
+					return rewardData;
+			}
+
+			return null;
 		}
 	}
 }

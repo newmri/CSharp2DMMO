@@ -38,24 +38,6 @@ namespace Server
 			ConfigManager.LoadConfig();
 			DataManager.LoadData();
 
-			// TEST
-			using (AppDbContext db = new AppDbContext())
-			{
-				PlayerDb player = db.Players.FirstOrDefault();
-				if (player != null)
-				{
-					db.Items.Add(new ItemDb()
-					{
-						TemplateId = 1,
-						Count = 1,
-						Slot = 0,
-						Owner = player
-					});
-				}
-
-				db.SaveChangesEx();
-			}
-
 			GameRoom room = RoomManager.Instance.Add(1);
 			TickRoom(room, 50);
 

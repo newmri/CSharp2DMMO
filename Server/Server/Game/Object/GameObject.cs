@@ -148,5 +148,10 @@ namespace Server.Game
 
 			room.Push(room.EnterGame, this);
 		}
+
+		public virtual GameObject GetOwner()
+		{
+			return this;
+		}
 	}
 }
