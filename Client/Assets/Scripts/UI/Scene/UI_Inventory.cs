@@ -20,19 +20,24 @@ public class UI_Inventory : UI_Base
             UI_Inventory_Item item = go.GetOrAddComponent<UI_Inventory_Item>();
             Items.Add(item);
         }
+
+        RefreshUI();
     }
 
     public void RefreshUI()
     {
+        if (Items.Count == 0)
+            return;
+
         List<Item> items = Managers.Inventory.Items.Values.ToList();
         items.Sort((left, right) => { return left.Slot - right.Slot; });
 
         foreach (Item item in items)
         {
-            if (item.Slot < 0 || item.Slot >= 20)
+            if (item.Slot < 0 || item.Slot >= 24)
                 continue;
 
-            Items[item.Slot].SetItem(item.TemplateId, item.Count);
+            Items[item.Slot].SetItem(item);
         }
     }
 }

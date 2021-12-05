@@ -160,7 +160,7 @@ namespace Server.Game
 				Skill skillData = null;
 				DataManager.SkillDict.TryGetValue(1, out skillData);
 
-				_target.OnDamaged(this, skillData.damage + Stat.Attack);
+				_target.OnDamaged(this, skillData.damage + TotalAttack);
 
 				S_Skill skill = new S_Skill() { Info = new SkillInfo() };
 				skill.ObjectId = Id;

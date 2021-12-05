@@ -157,6 +157,9 @@ class PacketHandler
 			Item item = Item.MakeItem(itemInfo);
 			Managers.Inventory.Add(item);
 		}
+
+		if(Managers.Object.MyPlayer != null)
+			Managers.Object.MyPlayer.RefreshAdditionalStat();
 	}
 
 	public static void S_AddItemHandler(PacketSession session, IMessage packet)
@@ -168,6 +171,36 @@ class PacketHandler
 			Item item = Item.MakeItem(itemInfo);
 			Managers.Inventory.Add(item);
 		}
+
+		UI_GameScene gameSceneUI = Managers.UI.SceneUI as UI_GameScene;
+		UI_Inventory invenUI = gameSceneUI.InvenUI;
+		invenUI.RefreshUI();
+
+		if (Managers.Object.MyPlayer != null)
+			Managers.Object.MyPlayer.RefreshAdditionalStat();
+	}
+
+	public static void S_EquipItemHandler(PacketSession session, IMessage packet)
+	{
+		S_EquipItem equipItem = packet as S_EquipItem;
+
+		Item item = Managers.Inventory.Get(equipItem.ItemDbId);
+		if (item == null)
+			return;
+
+		item.Equipped = equipItem.Equipped;
+
+		UI_GameScene gameSceneUI = Managers.UI.SceneUI as UI_GameScene;
+		UI_Inventory invenUI = gameSceneUI.InvenUI;
+		invenUI.RefreshUI();
+
+		if (Managers.Object.MyPlayer != null)
+			Managers.Object.MyPlayer.RefreshAdditionalStat();
+	}
+
+	public static void S_ChangeStatHandler(PacketSession session, IMessage packet)
+	{
+		S_ChangeStat changeStat = packet as S_ChangeStat;
 	}
 }
 
