@@ -173,8 +173,8 @@ class PacketHandler
 		}
 
 		UI_GameScene gameSceneUI = Managers.UI.SceneUI as UI_GameScene;
-		UI_Inventory invenUI = gameSceneUI.InvenUI;
-		invenUI.RefreshUI();
+		gameSceneUI.InvenUI.RefreshUI();
+		gameSceneUI.StatUI.RefreshUI();
 
 		if (Managers.Object.MyPlayer != null)
 			Managers.Object.MyPlayer.RefreshAdditionalStat();
@@ -191,8 +191,8 @@ class PacketHandler
 		item.Equipped = equipItem.Equipped;
 
 		UI_GameScene gameSceneUI = Managers.UI.SceneUI as UI_GameScene;
-		UI_Inventory invenUI = gameSceneUI.InvenUI;
-		invenUI.RefreshUI();
+		gameSceneUI.InvenUI.RefreshUI();
+		gameSceneUI.StatUI.RefreshUI();
 
 		if (Managers.Object.MyPlayer != null)
 			Managers.Object.MyPlayer.RefreshAdditionalStat();
