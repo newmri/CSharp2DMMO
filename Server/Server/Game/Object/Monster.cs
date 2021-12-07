@@ -28,6 +28,7 @@ namespace Server.Game
 			State = CreatureState.Idle;
 		}
 
+		IJob _job;
 		public override void Update()
 		{
 			switch (State)
@@ -45,6 +46,9 @@ namespace Server.Game
 					UpdateDead();
 					break;
 			}
+
+			if (Room != null)
+				_job = Room.PushAfter(200, Update);
 		}
 
 		Player _target;
@@ -196,6 +200,12 @@ namespace Server.Game
 					Player player = (Player)owner;
 					DbTransaction.RewardPlayer(player, rewardData, Room);
 				}
+			}
+
+			if (_job != null)
+			{
+				_job.Cancel = true;
+				_job = null;
 			}
 		}
 
