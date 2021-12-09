@@ -17,20 +17,47 @@ using ServerCore;
 
 namespace Server
 {
+	/*
+	 Recv(N)
+	 GameLogic(1)
+	 Send(1)
+	 DB(1)
+	*/
 	class Program
 	{
 		static Listener _listener = new Listener();
-		static List<System.Timers.Timer> _timers = new List<System.Timers.Timer>();
 
-		static void TickRoom(GameRoom room, int tick = 100)
+		static void GameLogicTask()
 		{
-			var timer = new System.Timers.Timer();
-			timer.Interval = tick;
-			timer.Elapsed += ((s, e) => { room.Update(); });
-			timer.AutoReset = true;
-			timer.Enabled = true;
+			while (true)
+			{
+				GameLogic.Instance.Update();
+				Thread.Sleep(0);
+			}
+		}
 
-			_timers.Add(timer);
+		static void DbTask()
+		{
+			while (true)
+			{
+				DbTransaction.Instance.Flush();
+				Thread.Sleep(0);
+			}
+		}
+
+		static void NetworkTask()
+		{
+			while (true)
+			{
+				List<ClientSession> sessions = SessionManager.Instance.GetSessions();
+
+				foreach (ClientSession session in sessions)
+				{
+					session.FlushSend();
+				}
+
+				Thread.Sleep(0);
+			}
 		}
 
 		static void Main(string[] args)
@@ -38,8 +65,10 @@ namespace Server
 			ConfigManager.LoadConfig();
 			DataManager.LoadData();
 
-			GameRoom room = RoomManager.Instance.Add(1);
-			TickRoom(room, 50);
+			GameLogic.Instance.Push(() =>
+			{
+				GameRoom room = GameLogic.Instance.Add(1);
+			});
 
 			// DNS (Domain Name System)
 			string host = Dns.GetHostName();
@@ -50,14 +79,17 @@ namespace Server
 			_listener.Init(endPoint, () => { return SessionManager.Instance.Generate(); });
 			Console.WriteLine("Listening...");
 
-			//FlushRoom();
-			//JobTimer.Instance.Push(FlushRoom);
-
-			// TODO
-			while (true)
 			{
-				DbTransaction.Instance.Flush();
+				Task gameLogicTask = new Task(GameLogicTask, TaskCreationOptions.LongRunning);
+				gameLogicTask.Start();
 			}
+
+			{
+				Task networkTask = new Task(NetworkTask, TaskCreationOptions.LongRunning);
+				networkTask.Start();
+			}
+
+			DbTask();
 		}
 	}
 }
