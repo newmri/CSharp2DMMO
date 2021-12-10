@@ -80,16 +80,19 @@ namespace Server
 			Console.WriteLine("Listening...");
 
 			{
-				Task gameLogicTask = new Task(GameLogicTask, TaskCreationOptions.LongRunning);
-				gameLogicTask.Start();
+				Thread t = new Thread(DbTask);
+				t.Name = "DbTask";
+				t.Start();
 			}
 
 			{
-				Task networkTask = new Task(NetworkTask, TaskCreationOptions.LongRunning);
-				networkTask.Start();
+				Thread t = new Thread(NetworkTask);
+				t.Name = "NetworkTask";
+				t.Start();
 			}
 
-			DbTask();
+			Thread.CurrentThread.Name = "GameLogicTask";
+			GameLogicTask();
 		}
 	}
 }
