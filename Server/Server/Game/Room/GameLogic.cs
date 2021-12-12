@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Server.Game
 {
-	public class GameLogic : JobSerializaer
+	public class GameLogic : JobSerializer
 	{
 		public static GameLogic Instance { get; } = new GameLogic();
 
@@ -24,13 +24,13 @@ namespace Server.Game
 		public GameRoom Add(int mapId)
 		{
 			GameRoom gameRoom = new GameRoom();
-			gameRoom.Push(gameRoom.Init, mapId);
+			gameRoom.Push(gameRoom.Init, mapId, 10);
 
-            gameRoom.RoomId = _roomId;
-            _rooms.Add(_roomId, gameRoom);
-            _roomId++;
+			gameRoom.RoomId = _roomId;
+			_rooms.Add(_roomId, gameRoom);
+			_roomId++;
 
-            return gameRoom;
+			return gameRoom;
 		}
 
 		public bool Remove(int roomId)
@@ -40,11 +40,11 @@ namespace Server.Game
 
 		public GameRoom Find(int roomId)
 		{
-            GameRoom room = null;
-            if (_rooms.TryGetValue(roomId, out room))
-                return room;
+			GameRoom room = null;
+			if (_rooms.TryGetValue(roomId, out room))
+				return room;
 
-            return null;
-        }
+			return null;
+		}
 	}
 }

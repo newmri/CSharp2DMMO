@@ -18,14 +18,14 @@ namespace Server.Game
 			Room.PushAfter(tick, Update);
 
 			Vector2Int destPos = GetFrontCellPos();
-			if (Room.Map.CanGo(destPos))
+			if (Room.Map.ApplyMove(this, destPos, collision: false))
 			{
-				CellPos = destPos;
-
 				S_Move movePacket = new S_Move();
 				movePacket.ObjectId = Id;
 				movePacket.PosInfo = PosInfo;
-				Room.Broadcast(movePacket);
+				Room.Broadcast(CellPos, movePacket);
+
+				Console.WriteLine("Move Arrow");
 			}
 			else
 			{
@@ -39,6 +39,7 @@ namespace Server.Game
 				Room.Push(Room.LeaveGame, Id);
 			}
 		}
+
 		public override GameObject GetOwner()
 		{
 			return Owner;

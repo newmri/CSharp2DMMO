@@ -7,7 +7,7 @@ using System.Text;
 
 namespace Server.DB
 {
-    public partial class DbTransaction : JobSerializaer
+    public partial class DbTransaction : JobSerializer
     {
         public static void EquipItemNoti(Player player, Item item)
         {

@@ -1,6 +1,7 @@
 ﻿using Google.Protobuf.Protocol;
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace Server.Game
@@ -19,6 +20,7 @@ namespace Server.Game
 		public ObjectInfo Info { get; set; } = new ObjectInfo();
 		public PositionInfo PosInfo { get; private set; } = new PositionInfo();
 		public StatInfo Stat { get; private set; } = new StatInfo();
+
 		public virtual int TotalAttack { get { return Stat.Attack; } }
 		public virtual int TotalDefence { get { return 0; } }
 
@@ -116,16 +118,13 @@ namespace Server.Game
 			if (Room == null)
 				return;
 
-			damage = (damage - TotalDefence);
-			if (damage <= 0)
-				return;
-
+			damage = Math.Max(damage - TotalDefence, 0);
 			Stat.Hp = Math.Max(Stat.Hp - damage, 0);
 
 			S_ChangeHp changePacket = new S_ChangeHp();
 			changePacket.ObjectId = Id;
 			changePacket.Hp = Stat.Hp;
-			Room.Broadcast(changePacket);
+			Room.Broadcast(CellPos, changePacket);
 
 			if (Stat.Hp <= 0)
 			{
@@ -141,18 +140,16 @@ namespace Server.Game
 			S_Die diePacket = new S_Die();
 			diePacket.ObjectId = Id;
 			diePacket.AttackerId = attacker.Id;
-			Room.Broadcast(diePacket);
+			Room.Broadcast(CellPos, diePacket);
 
 			GameRoom room = Room;
-			room.Push(room.LeaveGame, Id);
+			room.LeaveGame(Id);
 
 			Stat.Hp = Stat.MaxHp;
 			PosInfo.State = CreatureState.Idle;
 			PosInfo.MoveDir = MoveDir.Down;
-			PosInfo.PosX = 0;
-			PosInfo.PosY = 0;
 
-			room.Push(room.EnterGame, this);
+			room.EnterGame(this, randomPos: true);
 		}
 
 		public virtual GameObject GetOwner()

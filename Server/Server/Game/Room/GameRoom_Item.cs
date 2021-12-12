@@ -8,14 +8,14 @@ using System.Text;
 
 namespace Server.Game
 {
-    public partial class GameRoom : JobSerializaer
-    {
-        public void HandleEquipItem(Player player, C_EquipItem equipPacket)
-        {
-            if (player == null)
-                return;
+	public partial class GameRoom : JobSerializer
+	{		
+		public void HandleEquipItem(Player player, C_EquipItem equipPacket)
+		{
+			if (player == null)
+				return;
 
-            player.HandleEquipItem(equipPacket);
-        }
-    }
+			player.HandleEquipItem(equipPacket);
+		}
+	}
 }

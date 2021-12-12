@@ -22,9 +22,9 @@ namespace Server
 
 		object _lock = new object();
 		List<ArraySegment<byte>> _reserveQueue = new List<ArraySegment<byte>>();
-
+		
 		#region Network
-		// 예약
+		// 예약만 하고 보내지는 않는다
 		public void Send(IMessage packet)
 		{
 			string msgName = packet.Descriptor.Name.Replace("_", string.Empty);
@@ -41,6 +41,7 @@ namespace Server
 			}
 		}
 
+		// 실제 Network IO 보내는 부분
 		public void FlushSend()
 		{
 			List<ArraySegment<byte>> sendList = null;
@@ -54,8 +55,7 @@ namespace Server
 				_reserveQueue = new List<ArraySegment<byte>>();
 			}
 
-			if(sendList != null)
-				Send(sendList);
+			Send(sendList);
 		}
 
 		public override void OnConnected(EndPoint endPoint)
@@ -90,6 +90,6 @@ namespace Server
 		{
 			//Console.WriteLine($"Transferred bytes: {numOfBytes}");
 		}
-        #endregion
-    }
+		#endregion
+	}
 }
