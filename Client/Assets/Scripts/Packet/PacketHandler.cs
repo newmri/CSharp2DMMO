@@ -105,7 +105,9 @@ class PacketHandler
 	{
 		Debug.Log("S_ConnectedHandler");
 		C_Login loginPacket = new C_Login();
-		loginPacket.UniqueId = SystemInfo.deviceUniqueIdentifier;
+
+		string path = Application.dataPath;
+		loginPacket.UniqueId = path.GetHashCode().ToString();
 		Managers.Network.Send(loginPacket);
 	}
 
@@ -201,6 +203,13 @@ class PacketHandler
 	public static void S_ChangeStatHandler(PacketSession session, IMessage packet)
 	{
 		S_ChangeStat changeStat = packet as S_ChangeStat;
+	}
+
+	public static void S_PingHandler(PacketSession session, IMessage packet)
+	{
+		Debug.Log("PingCheck");
+		C_Pong pongPacket = new C_Pong();
+		Managers.Network.Send(pongPacket);
 	}
 }
 
