@@ -23,6 +23,9 @@ namespace Server
 		object _lock = new object();
 		List<ArraySegment<byte>> _reserveQueue = new List<ArraySegment<byte>>();
 
+		int _reservedSendBytes = 0;
+		long _lastSendTick = 0;
+
 		long _pingpongTick = 0;
 		public void Ping()
 		{
@@ -63,6 +66,7 @@ namespace Server
 			lock (_lock)
 			{
 				_reserveQueue.Add(sendBuffer);
+				_reservedSendBytes += sendBuffer.Length;
 			}
 		}
 
@@ -73,8 +77,13 @@ namespace Server
 
 			lock (_lock)
 			{
-				if (_reserveQueue.Count == 0)
+				// 0.1초가 지났거나, 패킷이 많이 모일 때
+				long delta = (System.Environment.TickCount64 - _lastSendTick);
+				if (delta < 100 && _reservedSendBytes < 10000)
 					return;
+
+				_reservedSendBytes = 0;
+				_lastSendTick = System.Environment.TickCount64;
 
 				sendList = _reserveQueue;
 				_reserveQueue = new List<ArraySegment<byte>>();
@@ -85,7 +94,6 @@ namespace Server
 
 		public override void OnConnected(EndPoint endPoint)
 		{
-			Console.WriteLine($"OnConnected : {endPoint}");
 
 			{
 				S_Connected connectedPacket = new S_Connected();
@@ -112,8 +120,6 @@ namespace Server
 			});
 
 			SessionManager.Instance.Remove(this);
-
-			Console.WriteLine($"OnDisconnected : {endPoint}");
 		}
 
 		public override void OnSend(int numOfBytes)
