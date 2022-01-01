@@ -67,8 +67,11 @@ public class UI_LoginScene : UI_Scene
 
 			if (res.LoginOk)
 			{
-				Managers.Network.ConntectToGame();
-				Managers.Scene.LoadScene(Define.Scene.Game);
+				Managers.Network.AccountId = res.AccountId;
+				Managers.Network.Token = res.Token;
+
+				UI_SelectServerPopup popup = Managers.UI.ShowPopupUI<UI_SelectServerPopup>();
+				popup.SetServers(res.ServerList);
 			}
 		});
 	}
